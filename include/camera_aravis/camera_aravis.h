@@ -65,8 +65,7 @@ typedef struct
   ArvDomNode *pNodeSibling;
 } NODEEX;
 
-
-static volatile gboolean                  bCancel;
+volatile gboolean bCancel;
 
 void set_cancel (int signal)
 {
