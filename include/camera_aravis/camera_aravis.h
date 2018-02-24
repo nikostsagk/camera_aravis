@@ -27,7 +27,6 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 #include <ros/duration.h>
-#include <nodelet/nodelet.h>
 
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Int64.h>
@@ -76,7 +75,7 @@ void set_cancel (int signal)
 
 const static char * NAME = "aravis";
 
-class CameraNodelet : public nodelet::Nodelet
+class CameraNode
 {
 
   typedef camera_aravis::CameraAravisConfig Config;
@@ -129,9 +128,7 @@ class CameraNodelet : public nodelet::Nodelet
 
   const char* GetPixelEncoding(ArvPixelFormat pixel_format);
 
-  virtual void onInit();
-
-  void onInitImpl();
+  //virtual void onInit();
 
 private:
   ApplicationData                         applicationData;
@@ -183,5 +180,7 @@ private:
   int                                     Acquire;
   const char                             *keyAcquisitionFrameRate;
 
+public:
+  void Start();
 };
 }

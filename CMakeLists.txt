@@ -13,9 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
               camera_info_manager
               dynamic_reconfigure
               tf
-              dynamic_reconfigure
-              nodelet
-              nodelet_topic_tools
 )
 find_package(Aravis 0.6 REQUIRED)
 find_package(GLIB2 REQUIRED)
@@ -40,23 +37,21 @@ catkin_package(
     image_transport
     camera_info_manager
     dynamic_reconfigure
-    nodelet
-    nodelet_topic_tools
     tf
     INCLUDE_DIRS include
-    LIBRARIES camera_nodelet
+    LIBRARIES camera_aravis
 )
 
 message(${Aravis_LIBRARIES})
 
-add_library(camera_nodelet src/camera_nodelet.cpp)
-target_link_libraries(camera_nodelet ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
-add_dependencies(camera_nodelet ${PROJECT_NAME}_gencfg)
-class_loader_hide_library_symbols(camera_nodelet)
+add_library(camera_aravis src/camera_aravis.cpp)
+target_link_libraries(camera_aravis ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
+add_dependencies(camera_aravis ${PROJECT_NAME}_gencfg)
+#class_loader_hide_library_symbols(camera_nodelet)
 
 add_executable(camera_node src/camera_node.cpp)
-target_link_libraries(camera_node camera_nodelet ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
-add_dependencies(camera_node camera_nodelet)
+target_link_libraries(camera_node camera_aravis ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
+add_dependencies(camera_node camera_aravis)
 
 add_executable(test_node src/test.cpp)
 target_link_libraries(test_node ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
@@ -67,7 +62,7 @@ install(TARGETS camera_node
 install(TARGETS test_node
       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
       
-install(TARGETS camera_nodelet
+install(TARGETS camera_aravis
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})

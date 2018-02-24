@@ -1,11 +1,10 @@
-#include <camera_aravis/camera_nodelet.h>
-
+#include <camera_aravis/camera_aravis.h>
 
 namespace camera_aravis
 {
 
 // Conversions from integers to Arv types.
-const char* CameraNodelet::szBufferStatusFromInt[] = {
+const char* CameraNode::szBufferStatusFromInt[] = {
   "ARV_BUFFER_STATUS_SUCCESS",
   "ARV_BUFFER_STATUS_CLEARED",
   "ARV_BUFFER_STATUS_TIMEOUT",
@@ -16,7 +15,7 @@ const char* CameraNodelet::szBufferStatusFromInt[] = {
   "ARV_BUFFER_STATUS_ABORTED"
 };
 
-ArvGvStream* CameraNodelet::CreateStream(void)
+ArvGvStream* CameraNode::CreateStream(void)
 {
     gboolean 		bAutoBuffer = FALSE;
     gboolean 		bPacketResend = TRUE;
@@ -63,7 +62,7 @@ ArvGvStream* CameraNodelet::CreateStream(void)
 
 
 
-void CameraNodelet::RosReconfigure_callback(Config &newconfig, uint32_t level)
+void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
 {
     int             changedAcquire;
     int             changedAcquisitionFrameRate;
@@ -356,9 +355,9 @@ void CameraNodelet::RosReconfigure_callback(Config &newconfig, uint32_t level)
 } // RosReconfigure_callback()
 
 
-void CameraNodelet::NewBuffer_callback (ArvStream *pStream, gpointer* data)
+void CameraNode::NewBuffer_callback (ArvStream *pStream, gpointer* data)
 {
-    CameraNodelet* This =reinterpret_cast<CameraNodelet*>(data);
+    CameraNode* This =reinterpret_cast<CameraNode*>(data);
 
     static uint64_t  cm = 0L;	// Camera time prev
     uint64_t  		 cn = 0L;	// Camera time now
@@ -465,13 +464,13 @@ void CameraNodelet::NewBuffer_callback (ArvStream *pStream, gpointer* data)
 } // NewBuffer_callback()
 
 
-void CameraNodelet::ControlLost_callback (ArvGvDevice *pGvDevice, gpointer* data)
+void CameraNode::ControlLost_callback (ArvGvDevice *pGvDevice, gpointer* data)
 {
     ROS_ERROR_NAMED (NAME, "Control lost.");
     bCancel = TRUE;
 }
 
-gboolean CameraNodelet::SoftwareTrigger_callback (void *device)
+gboolean CameraNode::SoftwareTrigger_callback (void *device)
 {
     arv_device_execute_command ((ArvDevice *)device, "TriggerSoftware");
 
@@ -481,9 +480,9 @@ gboolean CameraNodelet::SoftwareTrigger_callback (void *device)
 
 // PeriodicTask_callback()
 // Check for termination, and spin for ROS.
-gboolean CameraNodelet::PeriodicTask_callback (void *data)
+gboolean CameraNode::PeriodicTask_callback (void *data)
 {
-    CameraNodelet* This =reinterpret_cast<CameraNodelet*>(data);
+    CameraNode* This =reinterpret_cast<CameraNode*>(data);
     ApplicationData *pData = &This->applicationData;
 
     //  ROS_INFO_NAMED (NAME, "Frame rate = %d Hz", pData->nBuffers);
@@ -502,7 +501,7 @@ gboolean CameraNodelet::PeriodicTask_callback (void *data)
 
 
 // Get the child and the child's sibling, where <p___> indicates an indirection.
-NODEEX CameraNodelet::GetGcFirstChild(ArvGc *pGenicam, NODEEX nodeex)
+NODEEX CameraNode::GetGcFirstChild(ArvGc *pGenicam, NODEEX nodeex)
 {
     const char *szName=0;
 
@@ -547,7 +546,7 @@ NODEEX CameraNodelet::GetGcFirstChild(ArvGc *pGenicam, NODEEX nodeex)
 
 
 // Get the sibling and the sibling's sibling, where <p___> indicates an indirection.
-NODEEX CameraNodelet::GetGcNextSibling(ArvGc *pGenicam, NODEEX nodeex)
+NODEEX CameraNode::GetGcNextSibling(ArvGc *pGenicam, NODEEX nodeex)
 {
     const char *szName=0;
 
@@ -588,7 +587,7 @@ NODEEX CameraNodelet::GetGcNextSibling(ArvGc *pGenicam, NODEEX nodeex)
 
 
 // Walk the DOM tree, i.e. the tree represented by the XML file in the camera, and that contains all the various features, parameters, etc.
-void CameraNodelet::PrintDOMTree(ArvGc *pGenicam, NODEEX nodeex, int nIndent, bool debug)
+void CameraNode::PrintDOMTree(ArvGc *pGenicam, NODEEX nodeex, int nIndent, bool debug)
 {
     char		*szIndent=0;
     const char *szFeature=0;
@@ -639,7 +638,7 @@ void CameraNodelet::PrintDOMTree(ArvGc *pGenicam, NODEEX nodeex, int nIndent, bo
 // looking at the camera's XML file.  Camera enum's are string parameters, camera bools are false/true parameters (not 0/1),
 // integers are integers, doubles are doubles, etc.
 //
-void CameraNodelet::WriteCameraFeaturesFromRosparam(ros::NodeHandle& nh)
+void CameraNode::WriteCameraFeaturesFromRosparam(ros::NodeHandle& nh)
 {
     XmlRpc::XmlRpcValue	 			 xmlrpcParams;
     XmlRpc::XmlRpcValue::iterator	 iter;
@@ -709,7 +708,7 @@ void CameraNodelet::WriteCameraFeaturesFromRosparam(ros::NodeHandle& nh)
     }
 } // WriteCameraFeaturesFromRosparam()
 
-const char* CameraNodelet::GetPixelEncoding(ArvPixelFormat pixel_format)
+const char* CameraNode::GetPixelEncoding(ArvPixelFormat pixel_format)
 {
   // TODO: this is a table, it should not be implemented as structured code. Const array/vector lookup?
     static std::string none;
@@ -777,20 +776,22 @@ const char* CameraNodelet::GetPixelEncoding(ArvPixelFormat pixel_format)
     return 0;
 } // GetPixelEncoding()
 
-void CameraNodelet::onInit()
+/*
+void CameraNode::onInit()
 {
     NODELET_DEBUG("Starting Camera Nodelet");
     //! We will be retrying to open camera until it is open, which may block the
     //! thread. Nodelet::onInit() should not block, hence spawning a new thread
     //! to do initialization.
-    init_thread_ = boost::thread(boost::bind(&CameraNodelet::onInitImpl, this));
+    init_thread_ = boost::thread(boost::bind(&CameraNode::onInitImpl, this));
 }
+*/
 
-void CameraNodelet::onInitImpl()
+void CameraNode::Start()
 {
 
 //    ros::NodeHandle& nh = getNodeHandle(); // unused??
-    ros::NodeHandle& nh = getPrivateNodeHandle();
+    ros::NodeHandle nh;
 
     char   		*pszGuid = NULL;
     char    	 szGuid[512];
@@ -857,7 +858,7 @@ void CameraNodelet::onInitImpl()
         // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
         dynamic_reconfigure::Server<Config>                    reconfigureServer;
         dynamic_reconfigure::Server<Config>::CallbackType      reconfigureCallback;
-	reconfigureCallback = boost::bind(&CameraNodelet::RosReconfigure_callback, this,  _1, _2);
+	reconfigureCallback = boost::bind(&CameraNode::RosReconfigure_callback, this,  _1, _2);
 //        ros::Duration(2.0).sleep();
 
         // See if some basic camera features exist.
@@ -1115,7 +1116,7 @@ void CameraNodelet::onInitImpl()
         // Set up image_raw.
         image_transport::ImageTransport		*pTransport = new image_transport::ImageTransport(nh);
 //        publisher = pTransport->advertiseCamera("image_raw", 1);
-        publisher = pTransport->advertiseCamera("image", 1);
+        publisher = pTransport->advertiseCamera("camera_aravis/image", 1);
 
         // Connect signals with callbacks.
         g_signal_connect (pStream, "new-buffer",   G_CALLBACK (NewBuffer_callback),   this);
@@ -1170,6 +1171,3 @@ void CameraNodelet::onInitImpl()
 }
 
 }
-
-#include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(camera_aravis::CameraNodelet, nodelet::Nodelet);
