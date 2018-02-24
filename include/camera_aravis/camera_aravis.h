@@ -94,7 +94,9 @@ class CameraNode
   ArvGvStream *CreateStream(void);
 
   void RosReconfigure_callback(Config &config, uint32_t level);
-
+  
+  static void stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
+  
   static void NewBuffer_callback(ArvStream *pStream, gpointer *data);
 
   static void ControlLost_callback(ArvGvDevice *pGvDevice, gpointer* data);

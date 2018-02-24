@@ -22,7 +22,7 @@ ArvGvStream* CameraNode::CreateStream(void)
     unsigned int 	timeoutPacket = 40; // milliseconds
     unsigned int 	timeoutFrameRetention = 200;
 
-    ArvGvStream* pStream = (ArvGvStream *)arv_device_create_stream (pDevice, NULL, NULL);
+    ArvGvStream* pStream = (ArvGvStream *)arv_device_create_stream (pDevice, stream_priority_callback, NULL);
     if (pStream)
     {
         ArvBuffer	*pBuffer;
@@ -354,6 +354,20 @@ void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
 
 } // RosReconfigure_callback()
 
+void CameraNode::stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
+{
+	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
+		if (arv_make_thread_realtime (10)){
+      ROS_INFO_NAMED (NAME, "Set stream thread to realtime");
+    }
+		else if(arv_make_thread_high_priority (-10)){
+      ROS_INFO_NAMED (NAME, "Set stream thread to high priority");
+    }
+		else{
+      ROS_INFO_NAMED (NAME, "Failed to make stream thread realtime or high priority");
+    }
+  }
+}
 
 void CameraNode::NewBuffer_callback (ArvStream *pStream, gpointer* data)
 {
@@ -485,7 +499,7 @@ gboolean CameraNode::PeriodicTask_callback (void *data)
     CameraNode* This =reinterpret_cast<CameraNode*>(data);
     ApplicationData *pData = &This->applicationData;
 
-    //  ROS_INFO_NAMED (NAME, "Frame rate = %d Hz", pData->nBuffers);
+    ROS_INFO_NAMED (NAME, "Frame rate = %d Hz", pData->nBuffers);
     pData->nBuffers = 0;
 
     if (bCancel)
