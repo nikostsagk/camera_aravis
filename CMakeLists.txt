@@ -58,9 +58,15 @@ add_executable(camera_node src/camera_node.cpp)
 target_link_libraries(camera_node camera_nodelet ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
 add_dependencies(camera_node camera_nodelet)
 
+add_executable(test_node src/test.cpp)
+target_link_libraries(test_node ${catkin_LIBRARIES} ${Aravis_LIBRARIES} glib-2.0 gmodule-2.0 gobject-2.0)
+
 install(TARGETS camera_node
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+install(TARGETS test_node
+      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+      
 install(TARGETS camera_nodelet
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
