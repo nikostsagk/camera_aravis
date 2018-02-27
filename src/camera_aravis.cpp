@@ -356,6 +356,7 @@ void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
 
 void CameraNode::stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 {
+  //TODO: Add an option through launch file to set these priorities 
 	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
 		if (arv_make_thread_realtime (10)){
       ROS_INFO_NAMED (NAME, "Set stream thread to realtime");
@@ -499,9 +500,8 @@ gboolean CameraNode::PeriodicTask_callback (void *data)
     CameraNode* This =reinterpret_cast<CameraNode*>(data);
     ApplicationData *pData = &This->applicationData;
 
-    ROS_INFO_NAMED (NAME, "Frame rate = %d Hz", pData->nBuffers);
+    //ROS_INFO_NAMED (NAME, "Frame rate = %d Hz", pData->nBuffers);
     pData->nBuffers = 0;
-
     if (bCancel)
     {
         g_main_loop_quit (pData->main_loop);
@@ -838,12 +838,12 @@ void CameraNode::Start()
     // TODO: how did this work with multiple devices?
     if (nDevices>0)
     {
-
-        if (nh.hasParam("guid"))
+        std::string cam_id = ros::this_node::getName()+"/guid";
+        if (nh.hasParam(cam_id))
         {
             std::string		stGuid;
 
-            nh.getParam("guid", stGuid);
+            nh.getParam(cam_id, stGuid);
             strcpy (szGuid, stGuid.c_str());
             pszGuid = szGuid;
         }
@@ -1130,7 +1130,7 @@ void CameraNode::Start()
         // Set up image_raw.
         image_transport::ImageTransport		*pTransport = new image_transport::ImageTransport(nh);
 //        publisher = pTransport->advertiseCamera("image_raw", 1);
-        publisher = pTransport->advertiseCamera("camera_aravis/image", 1);
+        publisher = pTransport->advertiseCamera("image_raw", 1);
 
         // Connect signals with callbacks.
         g_signal_connect (pStream, "new-buffer",   G_CALLBACK (NewBuffer_callback),   this);
@@ -1146,13 +1146,13 @@ void CameraNode::Start()
 
         applicationData.main_loop = g_main_loop_new (NULL, FALSE);
         g_main_loop_run (applicationData.main_loop);
-
+        
         if (idSoftwareTriggerTimer)
         {
             g_source_remove(idSoftwareTriggerTimer);
             idSoftwareTriggerTimer = 0;
         }
-
+        
         signal (SIGINT, pSigintHandlerOld);
 
         g_main_loop_unref (applicationData.main_loop);
