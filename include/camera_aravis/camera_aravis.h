@@ -115,7 +115,8 @@ class CameraNode
 
   // Walk the DOM tree, i.e. the tree represented by the XML file in the camera, and that contains all the various features, parameters, etc.
   void PrintDOMTree(ArvGc *pGenicam, NODEEX nodeex, int nIndent, bool debug=false);
-
+  
+  bool setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type);
   // WriteCameraFeaturesFromRosparam()
   // Read ROS parameters from this node's namespace, and see if each parameter has a similarly named & typed feature in the camera.  Then set the
   // camera feature to that value.  For example, if the parameter camnode/Gain is set to 123.0, then we'll write 123.0 to the Gain feature
@@ -180,7 +181,8 @@ private:
   int                                     mtu;
   int                                     Acquire;
   const char                             *keyAcquisitionFrameRate;
-
+  const char                             *keyExposureTime;
+  
 public:
   void Start();
 };

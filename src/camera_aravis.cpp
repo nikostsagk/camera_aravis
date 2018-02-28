@@ -15,6 +15,75 @@ const char* CameraNode::szBufferStatusFromInt[] = {
   "ARV_BUFFER_STATUS_ABORTED"
 };
 
+bool CameraNode::setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type){
+  bool success = false;
+  std::string node_name = ros::this_node::getName();
+  std::string fullParamName = node_name+"/"+paramName;
+  if (nh.hasParam(fullParamName))
+  {
+    if(type == "str"){
+      std::string strFeature;
+      nh.getParam(fullParamName, strFeature);
+      arv_device_set_string_feature_value (pDevice,paramName.c_str(),strFeature.c_str());
+      std::string valFromCam = arv_device_get_string_feature_value (pDevice, paramName.c_str());
+      if(valFromCam == strFeature){
+        success = true;
+        ROS_INFO_NAMED (NAME, "%s = %s", paramName.c_str(), valFromCam.c_str());
+      }
+      else{
+        ROS_WARN_NAMED (NAME, "%s couldn't be set to %s, instead set to %s", paramName.c_str(), strFeature.c_str(), valFromCam.c_str());
+      }
+    }
+    else if(type == "int"){
+      int intFeature;
+      nh.getParam(fullParamName, intFeature);
+      arv_device_set_integer_feature_value (pDevice,paramName.c_str(),intFeature);
+      int valFromCam = arv_device_get_integer_feature_value (pDevice, paramName.c_str());
+      if(valFromCam == intFeature){
+        success = true;
+        ROS_INFO_NAMED (NAME, "%s = %d", paramName.c_str(), valFromCam);
+      }
+      else{
+        ROS_WARN_NAMED (NAME, "%s couldn't be set to %d, instead set to %d", paramName.c_str(), intFeature, valFromCam);
+      }
+    }
+    else if(type == "float"){
+      double floatFeature;
+      nh.getParam(fullParamName, floatFeature);
+      arv_device_set_float_feature_value (pDevice,paramName.c_str(),floatFeature);
+      double valFromCam = arv_device_get_float_feature_value (pDevice, paramName.c_str());
+      if(valFromCam == floatFeature){
+        success = true;
+        ROS_INFO_NAMED (NAME, "%s = %f", paramName.c_str(), valFromCam);
+      }
+      else{
+        ROS_WARN_NAMED (NAME, "%s couldn't be set to %f, instead set to %f", paramName.c_str(), floatFeature, valFromCam);
+      }
+    }
+    else if(type == "bool"){
+      gboolean boolFeature;
+      nh.getParam(fullParamName, boolFeature);
+      arv_device_set_boolean_feature_value (pDevice,paramName.c_str(),boolFeature);
+      gboolean valFromCam = arv_device_get_boolean_feature_value (pDevice, paramName.c_str());
+      if(valFromCam == boolFeature){
+        success = true;
+        ROS_INFO_NAMED (NAME, "%s = %s", paramName.c_str(), valFromCam?"True":"False");
+      }
+      else{
+        ROS_WARN_NAMED (NAME, "%s couldn't be set to %s, instead set to %s", paramName.c_str(), boolFeature?"True":"False", valFromCam?"True":"False");
+      }
+    }
+    else{
+      ROS_WARN_NAMED (NAME, "Invalid type %s for camera feature %s", type.c_str(), paramName.c_str());
+    }
+    
+  }
+  else{
+    ROS_WARN_NAMED (NAME, "Parameter %s doesn't exist", paramName.c_str());
+  }
+  return success;
+} //setFeatureFromParam()
+
 ArvGvStream* CameraNode::CreateStream(void)
 {
     gboolean 		bAutoBuffer = FALSE;
@@ -142,7 +211,7 @@ void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
         if (isImplementedExposureTimeAbs)
         {
 	  ROS_INFO_NAMED (NAME, "Set ExposureTimeAbs = %f", newconfig.ExposureTimeAbs);
-            arv_device_set_float_feature_value (pDevice, "ExposureTimeAbs", newconfig.ExposureTimeAbs);
+            arv_device_set_float_feature_value (pDevice, keyExposureTime, newconfig.ExposureTimeAbs);
         }
         else
             ROS_INFO_NAMED (NAME, "Camera does not support ExposureTimeAbs.");
@@ -169,7 +238,7 @@ void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
             if (newconfig.ExposureAuto=="Once")
             {
                 ros::Duration(2.0).sleep();
-                newconfig.ExposureTimeAbs = arv_device_get_float_feature_value (pDevice, "ExposureTimeAbs");
+                newconfig.ExposureTimeAbs = arv_device_get_float_feature_value (pDevice, keyExposureTime);
                 ROS_INFO_NAMED (NAME, "Get ExposureTimeAbs = %f", newconfig.ExposureTimeAbs);
                 newconfig.ExposureAuto = "Off";
             }
@@ -813,6 +882,7 @@ void CameraNode::Start()
     int			 nDevices = 0;
     int 		 i = 0;
     const char	*pkeyAcquisitionFrameRate[2] = {"AcquisitionFrameRate", "AcquisitionFrameRateAbs"};
+    const char	*pkeyExposureTime[2] = {"ExposureTimeAbs", "ExposureTime"};
     ArvGcNode	*pGcNode;
     GError		*error=NULL;
 
@@ -821,7 +891,7 @@ void CameraNode::Start()
     bCancel = FALSE;
 
     // TODO: support parameters, not just dynamic reconfigure
-    config = config.__getDefault__();
+    //config = config.__getDefault__();
     idSoftwareTriggerTimer = 0;
 
     // Print out some useful info.
@@ -869,14 +939,132 @@ void CameraNode::Start()
         pDevice = arv_camera_get_device(pCamera);
         ROS_INFO_NAMED (NAME, "Opened: %s-%s", arv_device_get_string_feature_value (pDevice, "DeviceVendorName"), arv_device_get_string_feature_value (pDevice, "DeviceID"));
 
+        std::string node_name = ros::this_node::getName();
+        /*std::vector< std::string > paramNames;
+        nh.getParamNames(paramNames);
+        for(std::vector< std::string >::iterator it = paramNames.begin(); it != paramNames.end(); it++){
+          ROS_INFO_NAMED (NAME, "%s", (*it).c_str());
+        }*/
+        std::string fullParamName = node_name+"/frame_id";
+        if (nh.hasParam(fullParamName))
+        {
+          nh.getParam(fullParamName, config.frame_id);
+        }
+        xRoi=0; yRoi=0; widthRoi=0; heightRoi=0;
+        arv_camera_get_sensor_size			(pCamera, &widthSensor, &heightSensor);
+        arv_camera_get_width_bounds			(pCamera, &widthRoiMin, &widthRoiMax);
+        arv_camera_get_height_bounds		(pCamera, &heightRoiMin, &heightRoiMax);
+        arv_camera_get_region (pCamera, &xRoi, &yRoi, &widthRoi, &heightRoi);
+        pszPixelformat   		= GetPixelEncoding(arv_camera_get_pixel_format(pCamera));
+        nBytesPixel      		= ARV_PIXEL_FORMAT_BYTE_PER_PIXEL(arv_device_get_integer_feature_value(pDevice, "PixelFormat"));
+        
+        // Print information.
+        ROS_INFO_NAMED (NAME, "    Using Camera Configuration:");
+        ROS_INFO_NAMED (NAME, "    ---------------------------");
+        ROS_INFO_NAMED (NAME, "    Vendor name          = %s", arv_device_get_string_feature_value (pDevice, "DeviceVendorName"));
+        ROS_INFO_NAMED (NAME, "    Model name           = %s", arv_device_get_string_feature_value (pDevice, "DeviceModelName"));
+        ROS_INFO_NAMED (NAME, "    Device id            = %s", arv_device_get_string_feature_value (pDevice, "DeviceID"));
+        ROS_INFO_NAMED (NAME, "    Sensor width         = %d", widthSensor);
+        ROS_INFO_NAMED (NAME, "    Sensor height        = %d", heightSensor);
+        ROS_INFO_NAMED (NAME, "    ROI x,y,w,h          = %d, %d, %d, %d", xRoi, yRoi, widthRoi, heightRoi);
+        ROS_INFO_NAMED (NAME, "    Pixel format         = %s", pszPixelformat);
+        ROS_INFO_NAMED (NAME, "    BytesPerPixel        = %d", nBytesPixel);
+        
+        if(node_name.find("pointgrey", 0) != std::string::npos)
+        {
+          ROS_INFO_NAMED (NAME, " Setting Parameters for pointgrey camera");
+          setFeatureFromParam(nh, "AcquisitionMode", "str");
+          setFeatureFromParam(nh, "AcquisitionFrameRateAuto", "str");
+          setFeatureFromParam(nh, "ExposureAuto", "str");
+          setFeatureFromParam(nh, "ExposureMode", "str");
+          setFeatureFromParam(nh, "ExposureTime", "float");
+          setFeatureFromParam(nh, "AutoExposureTimeLowerLimit", "float");
+          setFeatureFromParam(nh, "AutoExposureTimeUpperLimit", "float");
+          setFeatureFromParam(nh, "GainAuto", "str");
+          setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "AutoGainLowerLimit", "float");
+          setFeatureFromParam(nh, "AutoGainUpperLimit", "float");
+          setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
+          setFeatureFromParam(nh, "TriggerMode", "str");
+          arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+        }
+        else  if(node_name.find("avt_mako", 0) != std::string::npos)
+        {
+          ROS_INFO_NAMED (NAME, " Setting Parameters for AVT Mako camera");
+          setFeatureFromParam(nh, "AcquisitionMode", "str");
+          setFeatureFromParam(nh, "AcquisitionFrameRateAbs", "float");
+          setFeatureFromParam(nh, "AcquisitionFrameRateLimit", "float");
+          setFeatureFromParam(nh, "ExposureAuto", "str");
+          setFeatureFromParam(nh, "ExposureMode", "str");
+          setFeatureFromParam(nh, "ExposureTimeAbs", "float");
+          setFeatureFromParam(nh, "ExposureAutoMin", "int");
+          setFeatureFromParam(nh, "ExposureAutoMax", "int");
+          setFeatureFromParam(nh, "GainAuto", "str");
+          setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "GainAutoMin", "float");
+          setFeatureFromParam(nh, "GainAutoMax", "float");
+          setFeatureFromParam(nh, "DSPSubregionLeft", "int");
+          setFeatureFromParam(nh, "DSPSubregionTop", "int");
+          setFeatureFromParam(nh, "DSPSubregionRight", "int");
+          setFeatureFromParam(nh, "DSPSubregionBottom", "int");
+          setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
+          setFeatureFromParam(nh, "TriggerMode", "str");
+          //arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+        }
+        else if(node_name.find("avt_prosilica", 0) != std::string::npos)
+        {
+          ROS_INFO_NAMED (NAME, " Setting Parameters for AVT Prosilica camera");
+          setFeatureFromParam(nh, "AcquisitionMode", "str");
+          setFeatureFromParam(nh, "AcquisitionFrameRateAbs", "float");
+          setFeatureFromParam(nh, "AcquisitionFrameRateLimit", "float");
+          setFeatureFromParam(nh, "ExposureAuto", "str");
+          setFeatureFromParam(nh, "ExposureMode", "str");
+          setFeatureFromParam(nh, "ExposureTimeAbs", "float");
+          setFeatureFromParam(nh, "ExposureAutoMin", "int");
+          setFeatureFromParam(nh, "ExposureAutoMax", "int");
+          setFeatureFromParam(nh, "GainAuto", "str");
+          setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "GainAutoMin", "float");
+          setFeatureFromParam(nh, "GainAutoMax", "float");
+          setFeatureFromParam(nh, "DSPSubregionLeft", "int");
+          setFeatureFromParam(nh, "DSPSubregionTop", "int");
+          setFeatureFromParam(nh, "DSPSubregionRight", "int");
+          setFeatureFromParam(nh, "DSPSubregionBottom", "int");
+          setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
+          setFeatureFromParam(nh, "TriggerMode", "str");
+          //arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+        }
+        else if(node_name.find("ids_gv", 0) != std::string::npos)
+        {  
+          ROS_INFO_NAMED (NAME, " Setting Parameters for IDS camera");
+          setFeatureFromParam(nh, "AcquisitionMode", "str");
+          setFeatureFromParam(nh, "AcquisitionFrameRate", "float");
+          setFeatureFromParam(nh, "ExposureAuto", "str");
+          setFeatureFromParam(nh, "ExposureMode", "str");
+          setFeatureFromParam(nh, "ExposureTime", "float");
+          setFeatureFromParam(nh, "BrightnessAutoExposureTimeLimitMode", "str");
+          setFeatureFromParam(nh, "BrightnessAutoExposureTimeMin", "float");
+          setFeatureFromParam(nh, "BrightnessAutoExposureTimeMax", "float");
+          setFeatureFromParam(nh, "GainAuto", "str");
+          setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "BrightnessAutoGainLimitMode", "str");
+          setFeatureFromParam(nh, "BrightnessAutoGainMin", "float");
+          setFeatureFromParam(nh, "BrightnessAutoGainMax", "float");
+          setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
+          //setFeatureFromParam(nh, "TriggerMode", "str");
+          //arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+        }
+        else{
+          ROS_INFO_NAMED (NAME, "Default camera parameters set");
+        }
         // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
-        dynamic_reconfigure::Server<Config>                    reconfigureServer;
-        dynamic_reconfigure::Server<Config>::CallbackType      reconfigureCallback;
-	reconfigureCallback = boost::bind(&CameraNode::RosReconfigure_callback, this,  _1, _2);
+        //dynamic_reconfigure::Server<Config>                    reconfigureServer;
+        //dynamic_reconfigure::Server<Config>::CallbackType      reconfigureCallback;
+	//reconfigureCallback = boost::bind(&CameraNode::RosReconfigure_callback, this,  _1, _2);
 //        ros::Duration(2.0).sleep();
 
         // See if some basic camera features exist.
-        pGcNode = arv_device_get_feature (pDevice, "AcquisitionMode");
+        /*pGcNode = arv_device_get_feature (pDevice, "AcquisitionMode");
         isImplementedAcquisitionMode = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
 
         pGcNode = arv_device_get_feature (pDevice, "GainRaw");
@@ -884,8 +1072,8 @@ void CameraNode::Start()
         pGcNode = arv_device_get_feature (pDevice, "Gain");
         isImplementedGain |= ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
 
-        pGcNode = arv_device_get_feature (pDevice, "ExposureTimeAbs");
-        isImplementedExposureTimeAbs = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
+        //pGcNode = arv_device_get_feature (pDevice, "ExposureTimeAbs");
+        //isImplementedExposureTimeAbs = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
 
         pGcNode = arv_device_get_feature (pDevice, "ExposureAuto");
         isImplementedExposureAuto = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
@@ -922,6 +1110,19 @@ void CameraNode::Start()
             if (isImplementedAcquisitionFrameRate)
             {
                 keyAcquisitionFrameRate = pkeyAcquisitionFrameRate[i];
+                break;
+            }
+        }
+        
+        // Find the key name for exposure time.
+        keyExposureTime = NULL;
+        for (i=0; i<2; i++)
+        {
+            pGcNode = arv_device_get_feature (pDevice, pkeyExposureTime[i]);
+            isImplementedExposureTimeAbs = pGcNode ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
+            if (isImplementedExposureTimeAbs)
+            {
+                keyExposureTime = pkeyExposureTime[i];
                 break;
             }
         }
@@ -964,13 +1165,13 @@ void CameraNode::Start()
 	nh.getParam("AcquisitionFrameRate", config.AcquisitionFrameRate);
 	nh.getParam("Binning", config.Binning);
 	nh.getParam("mtu", config.mtu);
-	reconfigureServer.updateConfig(config); // sync up with dynamic reconfig so everyone has the same config
+	//reconfigureServer.updateConfig(config); // sync up with dynamic reconfig so everyone has the same config
 
 	if (isImplementedMtu)
 		arv_camera_gv_set_packet_size(pCamera, config.mtu);
 
         if (isImplementedExposureTimeAbs)
-            arv_device_set_float_feature_value(pDevice, "ExposureTimeAbs", config.ExposureTimeAbs);
+            arv_device_set_float_feature_value(pDevice, keyExposureTime, config.ExposureTimeAbs);
         if (isImplementedGain)
             arv_camera_set_gain(pCamera, config.Gain);
         //arv_device_set_integer_feature_value(pDevice, "GainRaw", config.GainRaw);
@@ -1030,14 +1231,9 @@ void CameraNode::Start()
         xRoi=0; yRoi=0; widthRoi=0; heightRoi=0;
 	dx=1; dy=1;
 	arv_camera_get_binning(pCamera, &dx, &dy);
-  std::string node_name = ros::this_node::getName();
-  if(node_name.find("pointgrey", 0) != std::string::npos)
-  {
-    arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
-  }
     
         arv_camera_get_region (pCamera, &xRoi, &yRoi, &widthRoi, &heightRoi);
-        config.ExposureTimeAbs 	= isImplementedExposureTimeAbs ? arv_device_get_float_feature_value (pDevice, "ExposureTimeAbs") : 0;
+        config.ExposureTimeAbs 	= isImplementedExposureTimeAbs ? arv_device_get_float_feature_value (pDevice, keyExposureTime) : 0;
         config.Gain      		= isImplementedGain ? arv_camera_get_gain (pCamera) : 0.0;
         pszPixelformat   		= GetPixelEncoding(arv_camera_get_pixel_format(pCamera));
         if(!pszPixelformat)
@@ -1097,7 +1293,7 @@ void CameraNode::Start()
 
         ROS_INFO_NAMED (NAME, "    ---------------------------");
 
-
+*/
 	// Print the tree of camera features, with their values.
 	ROS_DEBUG_NAMED (NAME, "    ----------------------------------------------------------------------------------");
 	NODEEX		 nodeex;
@@ -1115,8 +1311,8 @@ void CameraNode::Start()
         pCameraInfoManager = new camera_info_manager::CameraInfoManager(nh, arv_device_get_string_feature_value (pDevice, "DeviceID"));
 
 	// TODO: some camera config changed from when parameters were set, should we sync up the config with the current camera settings? or just keep them at what was requested?
-	reconfigureServer.updateConfig(config);
-	reconfigureServer.setCallback(reconfigureCallback);
+	//reconfigureServer.updateConfig(config);
+	//reconfigureServer.setCallback(reconfigureCallback);
 
         ArvGvStream *pStream = NULL;
         while (TRUE)
