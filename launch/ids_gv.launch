@@ -1,11 +1,11 @@
 <launch>
-  <arg name="camera_name" default="camera_ids_gv_aravis"/>     
+  <arg name="camera_name" default="cam_ids_gv"/>     
   <arg name="guid" default="IDS-4103231513" />
   <arg name="calibrated" default="0" />
   <arg name="frame_rate" default="30"/>
 
-  <group ns="$(arg camera_name)">
-    <node pkg="camera_aravis" type="camera_node" name="camera_ids_gv_aravis" output="screen" >
+  <group ns="cam_ids_gv_aravis">
+    <node pkg="camera_aravis" type="camera_node" name="cam_ids_gv_aravis" output="screen" >
       <param name="frame_id" value="$(arg camera_name)" />
       <param name="guid" type="str" value="$(arg guid)" />
 

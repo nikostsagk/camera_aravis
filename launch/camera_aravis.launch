@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find camera_aravis)/launch/avt_mako.launch"/>
+  <include file="$(find camera_aravis)/launch/avt_prosilica.launch"/>
+  <include file="$(find camera_aravis)/launch/ids_gv.launch"/>
+  <include file="$(find camera_aravis)/launch/ptgrey.launch"/>
+</launch>
