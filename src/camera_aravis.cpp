@@ -1030,6 +1030,12 @@ void CameraNode::Start()
         xRoi=0; yRoi=0; widthRoi=0; heightRoi=0;
 	dx=1; dy=1;
 	arv_camera_get_binning(pCamera, &dx, &dy);
+  std::string node_name = ros::this_node::getName();
+  if(node_name.find("pointgrey", 0) != std::string::npos)
+  {
+    arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+  }
+    
         arv_camera_get_region (pCamera, &xRoi, &yRoi, &widthRoi, &heightRoi);
         config.ExposureTimeAbs 	= isImplementedExposureTimeAbs ? arv_device_get_float_feature_value (pDevice, "ExposureTimeAbs") : 0;
         config.Gain      		= isImplementedGain ? arv_camera_get_gain (pCamera) : 0.0;
