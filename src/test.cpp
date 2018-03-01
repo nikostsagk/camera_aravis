@@ -91,17 +91,17 @@ main (int argc, char **argv)
                 ((subnet_mask&0x0000ff00)>>8), (subnet_mask&0x000000ff));
       }
               
-      //arv_device_set_integer_feature_value(device, "GevPersistentIPAddress", 0xc0a80128);
-      //printf("PIP: %x\n ", arv_device_get_integer_feature_value (device, "GevPersistentIPAddress"));
+      /*arv_device_set_integer_feature_value(device, "GevPersistentIPAddress", 0xc0a8030a);
+      printf("PIP: %x\n ", arv_device_get_integer_feature_value (device, "GevPersistentIPAddress"));
       
-      //arv_device_set_integer_feature_value(device, "GevPersistentSubnetMask", 0xffffff00);
-      //printf("PMask: %x\n ", arv_device_get_integer_feature_value (device, "GevPersistentSubnetMask"));
+      arv_device_set_integer_feature_value(device, "GevPersistentSubnetMask", 0xffffff00);
+      printf("PMask: %x\n ", arv_device_get_integer_feature_value (device, "GevPersistentSubnetMask"));
       
-      //arv_device_set_boolean_feature_value(device, "GevCurrentIPConfigurationPersistentIP", 1);
-      //printf("PIPFlag: %x\n ", arv_device_get_boolean_feature_value (device, "GevCurrentIPConfigurationPersistentIP"));
+      arv_device_set_boolean_feature_value(device, "GevCurrentIPConfigurationPersistentIP", 1);
+      printf("PIPFlag: %x\n ", arv_device_get_boolean_feature_value (device, "GevCurrentIPConfigurationPersistentIP"));
       
-      //arv_device_set_boolean_feature_value(device, "GevCurrentIPConfigurationDHCP", 0);
-      //printf("DHCPFlag: %x\n ", arv_device_get_boolean_feature_value (device, "GevCurrentIPConfigurationDHCP"));
+      arv_device_set_boolean_feature_value(device, "GevCurrentIPConfigurationDHCP", 0);
+      printf("DHCPFlag: %x\n ", arv_device_get_boolean_feature_value (device, "GevCurrentIPConfigurationDHCP"));*/
       
       
         void (*old_sigint_handler)(int);

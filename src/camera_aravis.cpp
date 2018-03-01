@@ -1009,7 +1009,7 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "DSPSubregionBottom", "int");
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
-          //arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
         }
         else if(node_name.find("avt_prosilica", 0) != std::string::npos)
         {
@@ -1032,7 +1032,7 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "DSPSubregionBottom", "int");
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
-          //arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
         }
         else if(node_name.find("ids_gv", 0) != std::string::npos)
         {  
@@ -1051,8 +1051,8 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "BrightnessAutoGainMin", "float");
           setFeatureFromParam(nh, "BrightnessAutoGainMax", "float");
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
-          //setFeatureFromParam(nh, "TriggerMode", "str");
-          //arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          setFeatureFromParam(nh, "TriggerMode", "str");
+          arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
         }
         else{
           ROS_INFO_NAMED (NAME, "Default camera parameters set");
