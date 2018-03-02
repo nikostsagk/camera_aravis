@@ -10,8 +10,8 @@
       <param name="guid" type="str" value="$(arg guid)" />
       
       <param name="AcquisitionMode" type="str" value="Continuous"/>
-      <param name="AcquisitionFrameRateAuto" type="str" value="Continuous"/>
       <param name="AcquisitionFrameRate" value="$(arg frame_rate)"/>
+      <param name="AcquisitionFrameRateAuto" type="str" value="Off"/>
       
       <!--param name="ExposureTime" value="5000.0"/--> <!-- Manual control -->
       <param name="ExposureAuto" type="str" value="Continuous"/>

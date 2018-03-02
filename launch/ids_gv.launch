@@ -13,7 +13,6 @@
       <param name="AcquisitionFrameRate" value="$(arg frame_rate)"/>
       
       <!--param name="ExposureTime" value="30000.0"/--> <!-- Manual control -->
-      
       <param name="ExposureMode" type="str" value="Timed"/>
       <param name="ExposureAuto" type="str" value="Continuous"/>
       <param name="BrightnessAutoExposureTimeLimitMode" type="str" value="On"/>
@@ -21,15 +20,12 @@
       <param name="BrightnessAutoExposureTimeMax" value="35000.0"/>
       
       <!--param name="Gain" value="5.0"/--> <!-- Manual control -->
-
-
-      <param name="Gamma" value="1.5"/>
-
-
       <param name="GainAuto" type="str" value="Continuous"/>
       <param name="BrightnessAutoGainLimitMode" type="str" value="On"/>
       <param name="BrightnessAutoGainMin" value="-30"/>
       <param name="BrightnessAutoGainMax" value="30.0"/>
+      
+      <param name="Gamma" value="1.5"/>
       
       <param name="GevSCPSPacketSize" value="9000"/>
       <param name="TriggerMode" type="str" value="Off"/>

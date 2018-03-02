@@ -974,6 +974,7 @@ void CameraNode::Start()
         {
           ROS_INFO_NAMED (NAME, " Setting Parameters for pointgrey camera");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
+          setFeatureFromParam(nh, "AcquisitionFrameRate", "float");
           setFeatureFromParam(nh, "AcquisitionFrameRateAuto", "str");
           setFeatureFromParam(nh, "ExposureAuto", "str");
           setFeatureFromParam(nh, "ExposureMode", "str");
@@ -1063,10 +1064,10 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "BrightnessAutoExposureTimeMax", "float");
           setFeatureFromParam(nh, "GainAuto", "str");
           setFeatureFromParam(nh, "Gain", "float");
-          setFeatureFromParam(nh, "Gamma", "float");
           setFeatureFromParam(nh, "BrightnessAutoGainLimitMode", "str");
           setFeatureFromParam(nh, "BrightnessAutoGainMin", "float");
           setFeatureFromParam(nh, "BrightnessAutoGainMax", "float");
+          setFeatureFromParam(nh, "Gamma", "float");
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
