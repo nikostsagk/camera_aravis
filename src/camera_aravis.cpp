@@ -586,12 +586,6 @@ gboolean CameraNode::PeriodicTask_callback (void *data)
     
     pData->cam_stats_pub.publish(cam_stats_msg);
     
-    ROS_INFO_NAMED (NAME, "Completed buffers = %Lu", (unsigned long long) n_completed_buffers);
-    ROS_INFO_NAMED (NAME, "Failures          = %Lu", (unsigned long long) n_failures);
-    ROS_INFO_NAMED (NAME, "Underruns         = %Lu", (unsigned long long) n_underruns);
-    ROS_INFO_NAMED (NAME, "Resent buffers    = %Lu", (unsigned long long) n_resent);
-    ROS_INFO_NAMED (NAME, "Missing           = %Lu", (unsigned long long) n_missing);
-    
     pData->nBuffers = 0;
     if (bCancel)
     {
