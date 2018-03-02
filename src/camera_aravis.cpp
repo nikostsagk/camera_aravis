@@ -993,14 +993,20 @@ void CameraNode::Start()
           ROS_INFO_NAMED (NAME, " Setting Parameters for AVT Mako camera");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRateAbs", "float");
-          setFeatureFromParam(nh, "AcquisitionFrameRateLimit", "float");
           setFeatureFromParam(nh, "ExposureAuto", "str");
           setFeatureFromParam(nh, "ExposureMode", "str");
           setFeatureFromParam(nh, "ExposureTimeAbs", "float");
+          setFeatureFromParam(nh, "ExposureAutoAlg", "str");
+          setFeatureFromParam(nh, "ExposureAutoAdjustTol", "int");
+          setFeatureFromParam(nh, "ExposureAutoOutliers", "int");
+          setFeatureFromParam(nh, "ExposureAutoTarget", "int");
           setFeatureFromParam(nh, "ExposureAutoMin", "int");
           setFeatureFromParam(nh, "ExposureAutoMax", "int");
           setFeatureFromParam(nh, "GainAuto", "str");
           setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "GainAutoAdjustTol", "int");
+          setFeatureFromParam(nh, "GainAutoOutliers", "int");
+          setFeatureFromParam(nh, "GainAutoTarget", "int");
           setFeatureFromParam(nh, "GainAutoMin", "float");
           setFeatureFromParam(nh, "GainAutoMax", "float");
           setFeatureFromParam(nh, "DSPSubregionLeft", "int");
@@ -1010,20 +1016,28 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          double valFromCam = arv_device_get_float_feature_value (pDevice, "AcquisitionFrameRateLimit");
+          ROS_WARN_NAMED (NAME, "The maximum frame rate possible for the current exposure duration pixel format is %f", valFromCam);
         }
         else if(node_name.find("avt_prosilica", 0) != std::string::npos)
         {
           ROS_INFO_NAMED (NAME, " Setting Parameters for AVT Prosilica camera");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRateAbs", "float");
-          setFeatureFromParam(nh, "AcquisitionFrameRateLimit", "float");
           setFeatureFromParam(nh, "ExposureAuto", "str");
           setFeatureFromParam(nh, "ExposureMode", "str");
           setFeatureFromParam(nh, "ExposureTimeAbs", "float");
+          setFeatureFromParam(nh, "ExposureAutoAlg", "str");
+          setFeatureFromParam(nh, "ExposureAutoAdjustTol", "int");
+          setFeatureFromParam(nh, "ExposureAutoOutliers", "int");
+          setFeatureFromParam(nh, "ExposureAutoTarget", "int");
           setFeatureFromParam(nh, "ExposureAutoMin", "int");
           setFeatureFromParam(nh, "ExposureAutoMax", "int");
           setFeatureFromParam(nh, "GainAuto", "str");
           setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "GainAutoAdjustTol", "int");
+          setFeatureFromParam(nh, "GainAutoOutliers", "int");
+          setFeatureFromParam(nh, "GainAutoTarget", "int");
           setFeatureFromParam(nh, "GainAutoMin", "float");
           setFeatureFromParam(nh, "GainAutoMax", "float");
           setFeatureFromParam(nh, "DSPSubregionLeft", "int");
@@ -1033,6 +1047,8 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          double valFromCam = arv_device_get_float_feature_value (pDevice, "AcquisitionFrameRateLimit");
+          ROS_WARN_NAMED (NAME, "The maximum frame rate possible for the current exposure duration pixel format is %f", valFromCam);
         }
         else if(node_name.find("ids_gv", 0) != std::string::npos)
         {  
