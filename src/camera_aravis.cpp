@@ -84,7 +84,7 @@ bool CameraNode::setFeatureFromParam(ros::NodeHandle &nh, std::string paramName,
   return success;
 } //setFeatureFromParam()
 
-ArvGvStream* CameraNode::CreateStream(void)
+ArvGvStream* CameraNode::CreateStream(ros::NodeHandle &nh)
 {
     gboolean 		bAutoBuffer = FALSE;
     gboolean 		bPacketResend = TRUE;
@@ -92,6 +92,34 @@ ArvGvStream* CameraNode::CreateStream(void)
     unsigned int 	timeoutFrameRetention = 200;
 
     ArvGvStream* pStream = (ArvGvStream *)arv_device_create_stream (pDevice, stream_priority_callback, NULL);
+    
+    std::string node_name = ros::this_node::getName();
+    std::string fullParamName = node_name+"/"+"thread_priority";
+    int priority;
+    if (nh.hasParam(fullParamName))
+    {
+      nh.getParam(fullParamName, priority);
+      if(priority == 2){
+        if (arv_make_thread_realtime (10)){
+          ROS_INFO_NAMED (NAME, "Set stream thread to realtime priority");
+        }
+        else{
+          ROS_WARN_NAMED (NAME, "Couldn't set stream thread to realtime priority");
+        }
+      }
+  		else if(priority == 1){
+        if(arv_make_thread_high_priority (-10)){
+          ROS_INFO_NAMED (NAME, "Set stream thread to high priority");
+        }
+        else{
+          ROS_WARN_NAMED (NAME, "Couldn't set stream thread to high priority");
+        }
+      }
+  		else{
+        ROS_INFO_NAMED (NAME, "Set stream thread to normal priority");
+      }
+    }
+    
     if (pStream)
     {
         ArvBuffer	*pBuffer;
@@ -426,17 +454,36 @@ void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
 void CameraNode::stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 {
   //TODO: Add an option through launch file to set these priorities 
+  /*ros::NodeHandle* nh = (ros::NodeHandle*) user_data;
+  std::string node_name = ros::this_node::getName();
+  std::string fullParamName = node_name+"/"+"thread_priority";
+  int priority;
 	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
-		if (arv_make_thread_realtime (10)){
-      ROS_INFO_NAMED (NAME, "Set stream thread to realtime");
+    if (nh->hasParam(fullParamName))
+    {
+      nh->getParam(fullParamName, priority);
+      if(priority == 2){
+        if (arv_make_thread_realtime (10)){
+          ROS_INFO_NAMED (NAME, "Set stream thread to realtime priority");
+        }
+        else{
+          ROS_WARN_NAMED (NAME, "Couldn't set stream thread to realtime priority");
+        }
+      }
+  		else if(priority == 1){
+        if(arv_make_thread_high_priority (-10)){
+          ROS_INFO_NAMED (NAME, "Set stream thread to high priority");
+        }
+        else{
+          ROS_WARN_NAMED (NAME, "Couldn't set stream thread to high priority");
+        }
+      }
+  		else{
+        ROS_INFO_NAMED (NAME, "Set stream thread to normal priority");
+      }
     }
-		else if(arv_make_thread_high_priority (-10)){
-      ROS_INFO_NAMED (NAME, "Set stream thread to high priority");
-    }
-		else{
-      ROS_INFO_NAMED (NAME, "Failed to make stream thread realtime or high priority");
-    }
-  }
+  }*/
+  return;
 }
 
 void CameraNode::NewBuffer_callback (ArvStream *pStream, gpointer* data)
@@ -1352,7 +1399,7 @@ void CameraNode::Start()
         ArvGvStream *pStream = NULL;
         while (TRUE)
         {
-            pStream = CreateStream();
+            pStream = CreateStream(nh);
             if (pStream)
                 break;
             else

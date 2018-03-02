@@ -93,7 +93,7 @@ class CameraNode
   // Conversions from integers to Arv types.
   const static char *szBufferStatusFromInt[];
 
-  ArvGvStream *CreateStream(void);
+  ArvGvStream *CreateStream(ros::NodeHandle &nh);
 
   void RosReconfigure_callback(Config &config, uint32_t level);
   

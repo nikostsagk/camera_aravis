@@ -9,6 +9,8 @@
         <param name="frame_id" value="$(arg camera_name)" />
         <param name="guid" type="str" value="$(arg guid)" />
         
+        <param name="thread_priority" value="0" /> <!-- 0 = normal, 1 = high priority, 2 = real-time -->
+        
         <param name="AcquisitionMode" type="str" value="Continuous"/>
         <param name="AcquisitionFrameRateAbs" value="$(arg frame_rate)"/>
         
