@@ -583,6 +583,7 @@ gboolean CameraNode::PeriodicTask_callback (void *data)
     cam_stats_msg.underruns = n_underruns;
     cam_stats_msg.resent_packets = n_resent;
     cam_stats_msg.missing_packets = n_missing;
+    cam_stats_msg.frame_rate = pData->nBuffers;
     
     pData->cam_stats_pub.publish(cam_stats_msg);
     
