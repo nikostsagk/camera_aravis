@@ -1,4 +1,4 @@
-<!-- Use this launch file to set IDS to contious exposure and gain mode-->
+<!-- Use this launch file to set IDS for manual exposure settings -->
 <launch>
   <arg name="camera_name" default="cam_ids_gv"/>     
   <arg name="guid" default="IDS-4103231513" />
@@ -15,18 +15,18 @@
       <param name="AcquisitionMode" type="str" value="Continuous"/>
       <param name="AcquisitionFrameRate" value="$(arg frame_rate)"/>
       
-      <!--param name="ExposureTime" value="30000.0"/--> <!-- Manual control -->
+      <param name="ExposureTime" value="30000.0"/> <!-- Try to tune this -->
       <param name="ExposureMode" type="str" value="Timed"/>
-      <param name="ExposureAuto" type="str" value="Continuous"/>
-      <param name="BrightnessAutoExposureTimeLimitMode" type="str" value="On"/>
-      <param name="BrightnessAutoExposureTimeMin" value="100.0"/>
-      <param name="BrightnessAutoExposureTimeMax" value="35000.0"/>
+      <!--param name="ExposureAuto" type="str" value="Continuous"/-->
+      <!--param name="BrightnessAutoExposureTimeLimitMode" type="str" value="On"/-->
+      <!--param name="BrightnessAutoExposureTimeMin" value="100.0"/-->
+      <!--param name="BrightnessAutoExposureTimeMax" value="35000.0"/-->
       
       <!--param name="Gain" value="5.0"/--> <!-- Manual control -->
-      <param name="GainAuto" type="str" value="Continuous"/>
-      <param name="BrightnessAutoGainLimitMode" type="str" value="On"/>
-      <param name="BrightnessAutoGainMin" value="-30"/>
-      <param name="BrightnessAutoGainMax" value="30.0"/>
+      <!--param name="GainAuto" type="str" value="Continuous"/-->
+      <!--param name="BrightnessAutoGainLimitMode" type="str" value="On"/-->
+      <!--param name="BrightnessAutoGainMin" value="-30"/-->
+      <!--param name="BrightnessAutoGainMax" value="30.0"/-->
       
       <param name="Gamma" value="1.5"/>
       
