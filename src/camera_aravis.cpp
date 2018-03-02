@@ -1063,6 +1063,7 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "BrightnessAutoExposureTimeMax", "float");
           setFeatureFromParam(nh, "GainAuto", "str");
           setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "Gamma", "float");
           setFeatureFromParam(nh, "BrightnessAutoGainLimitMode", "str");
           setFeatureFromParam(nh, "BrightnessAutoGainMin", "float");
           setFeatureFromParam(nh, "BrightnessAutoGainMax", "float");

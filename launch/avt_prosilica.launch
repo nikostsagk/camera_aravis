@@ -2,7 +2,7 @@
   <arg name="camera_name" default="cam_avt_prosilica"/>     
   <arg name="guid" default="Allied Vision Technologies-02-2677A-06279" />
   <arg name="calibrated" default="0" />
-  <arg name="frame_rate" default="30"/>
+  <arg name="frame_rate" default="20"/>
 
   <group ns="cam_avt_prosilica_aravis">
     <node pkg="camera_aravis" type="camera_node" name="cam_avt_prosilica_aravis" output="screen" clear_params="true" >
@@ -19,16 +19,16 @@
       <param name="ExposureAutoAdjustTol" value="5"/> <!--0 to 50 -->
       <param name="ExposureAutoOutliers" value="0"/> <!-- 1000 = 10% -->
       <param name="ExposureAutoTarget" value="50"/> <!-- 0=black to 100=white -->
-      <param name="ExposureAutoMin" value="1000.0"/>
-      <param name="ExposureAutoMax" value="30000.0"/>
+      <param name="ExposureAutoMin" value="100.0"/>
+      <param name="ExposureAutoMax" value="35000.0"/>
       
       <!--param name="Gain" value="1.0"/-->
       <param name="GainAuto" type="str" value="Continuous"/>
       <param name="GainAutoAdjustTol" value="5"/> <!--0 to 50 -->
       <param name="GainAutoOutliers" value="0"/> <!-- 1000 = 10% -->
       <param name="GainAutoTarget" value="50"/> <!-- 0=black to 100=white -->
-      <param name="GainAutoMin" value="1.0"/>
-      <param name="GainAutoMax" value="5.0"/>
+      <param name="GainAutoMin" value="-10.0"/>
+      <param name="GainAutoMax" value="30.0"/>
       
       <param name="DSPSubregionLeft" value="0"/>
       <param name="DSPSubregionTop" value="0"/>
