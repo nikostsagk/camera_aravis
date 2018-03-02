@@ -33,7 +33,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <image_transport/image_transport.h>
 #include <camera_info_manager/camera_info_manager.h>
-
+#include "camera_aravis/cam_stats.h"
 #include <dynamic_reconfigure/server.h>
 #include <tf/transform_listener.h>
 #include <camera_aravis/CameraAravisConfig.h>
@@ -83,6 +83,8 @@ class CameraNode
   {
     GMainLoop  *main_loop;
     int         nBuffers;	// Counter for Hz calculation.
+    ros::Publisher                          cam_stats_pub;
+    ArvGvStream *pstream_for_periodic_cb;
   } ApplicationData;
   // ------------------------------------
 
@@ -184,6 +186,7 @@ private:
   const char                             *keyExposureTime;
   
 public:
+  
   void Start();
 };
 }

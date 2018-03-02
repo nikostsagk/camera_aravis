@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
               camera_info_manager
               dynamic_reconfigure
               tf
+              message_generation
 )
 find_package(Aravis 0.6 REQUIRED)
 find_package(GLIB2 REQUIRED)
@@ -28,6 +29,15 @@ include_directories(include cfg/cpp
 
 generate_dynamic_reconfigure_options(cfg/CameraAravis.cfg)
 
+add_message_files(
+   FILES
+   cam_stats.msg
+ )
+
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
 
 catkin_package(
     DEPENDS Aravis GLIB2
@@ -38,10 +48,11 @@ catkin_package(
     camera_info_manager
     dynamic_reconfigure
     tf
+    message_runtime
     INCLUDE_DIRS include
     LIBRARIES camera_aravis
 )
-
+ 
 message(${Aravis_LIBRARIES})
 
 add_library(camera_aravis src/camera_aravis.cpp)

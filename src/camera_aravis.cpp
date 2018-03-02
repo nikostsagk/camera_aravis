@@ -568,8 +568,30 @@ gboolean CameraNode::PeriodicTask_callback (void *data)
 {
     CameraNode* This =reinterpret_cast<CameraNode*>(data);
     ApplicationData *pData = &This->applicationData;
-
+    guint64 n_completed_buffers;
+    guint64 n_failures;
+    guint64 n_underruns;
+    guint64 n_resent;
+    guint64 n_missing;
+    
+    cam_stats cam_stats_msg;
     //ROS_INFO_NAMED (NAME, "Frame rate = %d Hz", pData->nBuffers);
+    arv_stream_get_statistics ((ArvStream *)pData->pstream_for_periodic_cb, &n_completed_buffers, &n_failures, &n_underruns);
+    arv_gv_stream_get_statistics (pData->pstream_for_periodic_cb, &n_resent, &n_missing);
+    cam_stats_msg.completed_buffers = n_completed_buffers;
+    cam_stats_msg.failures = n_failures;
+    cam_stats_msg.underruns = n_underruns;
+    cam_stats_msg.resent_packets = n_resent;
+    cam_stats_msg.missing_packets = n_missing;
+    
+    pData->cam_stats_pub.publish(cam_stats_msg);
+    
+    ROS_INFO_NAMED (NAME, "Completed buffers = %Lu", (unsigned long long) n_completed_buffers);
+    ROS_INFO_NAMED (NAME, "Failures          = %Lu", (unsigned long long) n_failures);
+    ROS_INFO_NAMED (NAME, "Underruns         = %Lu", (unsigned long long) n_underruns);
+    ROS_INFO_NAMED (NAME, "Resent buffers    = %Lu", (unsigned long long) n_resent);
+    ROS_INFO_NAMED (NAME, "Missing           = %Lu", (unsigned long long) n_missing);
+    
     pData->nBuffers = 0;
     if (bCancel)
     {
@@ -1351,7 +1373,9 @@ void CameraNode::Start()
         image_transport::ImageTransport		*pTransport = new image_transport::ImageTransport(nh);
 //        publisher = pTransport->advertiseCamera("image_raw", 1);
         publisher = pTransport->advertiseCamera("image_raw", 1);
-
+        
+        applicationData.cam_stats_pub = nh.advertise<cam_stats>("statistics", 10);
+        applicationData.pstream_for_periodic_cb = pStream;
         // Connect signals with callbacks.
         g_signal_connect (pStream, "new-buffer",   G_CALLBACK (NewBuffer_callback),   this);
         g_signal_connect (pDevice, "control-lost", G_CALLBACK (ControlLost_callback), this);
