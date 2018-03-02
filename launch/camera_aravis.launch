@@ -1,4 +1,5 @@
 <launch>
+  <node name="mtu_script" pkg="camera_aravis" type="mtu_9000.sh" output="screen"/>
   <include file="$(find camera_aravis)/launch/avt_mako.launch"/>
   <include file="$(find camera_aravis)/launch/avt_prosilica.launch"/>
   <include file="$(find camera_aravis)/launch/ids_gv.launch"/>
