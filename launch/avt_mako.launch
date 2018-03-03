@@ -8,6 +8,8 @@
       <node pkg="camera_aravis" type="camera_node" name="cam_avt_mako_aravis" output="screen" clear_params="true">
         <param name="frame_id" value="$(arg camera_name)" />
         <param name="guid" type="str" value="$(arg guid)" />
+        <param name="frame_rate" value="$(arg frame_rate)" />
+        <param name="period_for_stats_annotation" value="30"/> <!-- In seconds. >=1000 disables annotation  -->
         
         <param name="thread_priority" value="2" /> <!-- 0 = normal, 1 = high priority, 2 = real-time -->
         

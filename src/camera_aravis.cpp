@@ -621,17 +621,50 @@ gboolean CameraNode::PeriodicTask_callback (void *data)
     guint64 n_resent;
     guint64 n_missing;
     
-    cam_stats cam_stats_msg;
+    CamStats cam_stats_msg;
     //ROS_INFO_NAMED (NAME, "Frame rate = %d Hz", pData->nBuffers);
     arv_stream_get_statistics ((ArvStream *)pData->pstream_for_periodic_cb, &n_completed_buffers, &n_failures, &n_underruns);
     arv_gv_stream_get_statistics (pData->pstream_for_periodic_cb, &n_resent, &n_missing);
-    cam_stats_msg.completed_buffers = n_completed_buffers;
-    cam_stats_msg.failures = n_failures;
-    cam_stats_msg.underruns = n_underruns;
-    cam_stats_msg.resent_packets = n_resent;
-    cam_stats_msg.missing_packets = n_missing;
-    cam_stats_msg.frame_rate = pData->nBuffers;
     
+    pData->n_secs += 1;  
+    bool annotatingEnabled = ((pData->annotating_period > 0) 
+                                && (pData->annotating_period < 1000) 
+                                && (pData->specified_frame_rate > 0)
+                                && (pData->specified_frame_rate < 50));  
+    if(annotatingEnabled && (pData->n_secs >= pData->annotating_period)){
+      gint64 expectedNumFrames = gint64(floor(float(pData->specified_frame_rate * pData->annotating_period)*0.99));
+      if(gint64(n_completed_buffers - pData->past_completed_buffers) < expectedNumFrames){
+        cam_stats_msg.annotate_frames_drop = true;
+        ROS_WARN_NAMED(NAME, "Frame rate dropped by more than 1%% in the last %d seconds", pData->annotating_period);
+      }
+      else{
+        cam_stats_msg.annotate_frames_drop = false;
+      }
+      if((n_failures != pData->past_failures) || (n_underruns != pData->past_underruns) || (n_missing != pData->past_missing)){
+        cam_stats_msg.annotate_packets_drop = true;
+        ROS_WARN_NAMED(NAME, "Noticed network-related packet drop in the last %d seconds", pData->annotating_period);
+      }
+      else{
+        cam_stats_msg.annotate_packets_drop = false;
+      }
+      pData->n_secs = 0;
+      pData->past_completed_buffers = n_completed_buffers;
+      pData->past_failures = n_failures;
+      pData->past_underruns = n_underruns;
+      pData->past_missing = n_missing;
+    }
+    else{
+      cam_stats_msg.annotate_frames_drop = false;
+      cam_stats_msg.annotate_packets_drop = false;
+    }
+    cam_stats_msg.curr_frames_received = pData->nBuffers;
+    cam_stats_msg.total_completed_buffers = n_completed_buffers;
+    cam_stats_msg.total_failures = n_failures;
+    cam_stats_msg.total_underruns = n_underruns;
+    cam_stats_msg.total_resent_packets = n_resent;
+    cam_stats_msg.total_missing_packets = n_missing;
+    
+    cam_stats_msg.header.stamp = ros::Time::now();
     pData->cam_stats_pub.publish(cam_stats_msg);
     
     pData->nBuffers = 0;
@@ -952,6 +985,42 @@ void CameraNode::Start()
 
     applicationData.nBuffers = 0;
     applicationData.main_loop = 0;
+    applicationData.past_completed_buffers = 0;
+    applicationData.past_failures = 0;
+    applicationData.past_underruns = 0;
+    applicationData.past_missing = 0;
+    applicationData.n_secs = 0;
+    applicationData.annotating_period = 2000;
+    applicationData.specified_frame_rate = 100;
+    std::string annotation_param = ros::this_node::getName()+"/period_for_stats_annotation";
+    if(nh.hasParam(annotation_param)){
+      nh.getParam(annotation_param, applicationData.annotating_period);
+      if((applicationData.annotating_period > 0) && (applicationData.annotating_period < 1000)){
+        ROS_INFO_NAMED (NAME, "Camera stats annotation period set to %d seconds", applicationData.annotating_period);
+      }
+      else{
+        ROS_WARN_NAMED (NAME, "Camera stats annotation disabled");
+      }
+    }
+    else{
+      ROS_WARN_NAMED (NAME, "Camera stats annotation disabled");
+    }
+    
+    std::string frame_rate_id = ros::this_node::getName()+"/frame_rate";
+    if (nh.hasParam(frame_rate_id))
+    {
+      nh.getParam(frame_rate_id, applicationData.specified_frame_rate);
+      if((applicationData.specified_frame_rate > 0) && (applicationData.specified_frame_rate < 50)){
+        ROS_INFO_NAMED (NAME, "Camera stats frame rate set to %d Hz", applicationData.specified_frame_rate);
+      }
+      else{
+        ROS_WARN_NAMED (NAME, "Camera stats annotation disabled. Frame rate out of range");
+      }
+    }
+    else{
+      ROS_WARN_NAMED (NAME, "Camera stats annotation disabled. Frame rate is unknown");
+    }
+    
     bCancel = FALSE;
 
     // TODO: support parameters, not just dynamic reconfigure
@@ -1409,14 +1478,25 @@ void CameraNode::Start()
                 ros::spinOnce();
             }
         }
-
-
+        
+        guint64 n_completed_buffers;
+        guint64 n_failures;
+        guint64 n_underruns;
+        guint64 n_resent;
+        guint64 n_missing;
+        arv_stream_get_statistics ((ArvStream *)pStream, &n_completed_buffers, &n_failures, &n_underruns);
+        arv_gv_stream_get_statistics (pStream, &n_resent, &n_missing);
+        applicationData.past_completed_buffers = n_completed_buffers;
+        applicationData.past_failures = n_failures;
+        applicationData.past_underruns = n_underruns;
+        applicationData.past_missing = n_missing;
+        
         // Set up image_raw.
         image_transport::ImageTransport		*pTransport = new image_transport::ImageTransport(nh);
 //        publisher = pTransport->advertiseCamera("image_raw", 1);
         publisher = pTransport->advertiseCamera("image_raw", 1);
         
-        applicationData.cam_stats_pub = nh.advertise<cam_stats>("statistics", 10);
+        applicationData.cam_stats_pub = nh.advertise<CamStats>("statistics", 10);
         applicationData.pstream_for_periodic_cb = pStream;
         // Connect signals with callbacks.
         g_signal_connect (pStream, "new-buffer",   G_CALLBACK (NewBuffer_callback),   this);
@@ -1443,11 +1523,6 @@ void CameraNode::Start()
 
         g_main_loop_unref (applicationData.main_loop);
 
-        guint64 n_completed_buffers;
-        guint64 n_failures;
-        guint64 n_underruns;
-        guint64 n_resent;
-        guint64 n_missing;
         arv_stream_get_statistics ((ArvStream *)pStream, &n_completed_buffers, &n_failures, &n_underruns);
         ROS_INFO_NAMED (NAME, "Completed buffers = %Lu", (unsigned long long) n_completed_buffers);
         ROS_INFO_NAMED (NAME, "Failures          = %Lu", (unsigned long long) n_failures);

@@ -1,0 +1,10 @@
+Header header
+
+uint32 curr_frames_received
+uint64 total_completed_buffers
+uint64 total_failures
+uint64 total_underruns
+uint64 total_resent_packets
+uint64 total_missing_packets
+bool annotate_frames_drop
+bool annotate_packets_drop

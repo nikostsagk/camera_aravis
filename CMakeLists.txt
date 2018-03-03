@@ -31,7 +31,7 @@ generate_dynamic_reconfigure_options(cfg/CameraAravis.cfg)
 
 add_message_files(
    FILES
-   cam_stats.msg
+   CamStats.msg
  )
 
  generate_messages(
