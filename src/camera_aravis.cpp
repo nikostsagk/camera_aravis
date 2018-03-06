@@ -453,36 +453,6 @@ void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
 
 void CameraNode::stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 {
-  //TODO: Add an option through launch file to set these priorities 
-  /*ros::NodeHandle* nh = (ros::NodeHandle*) user_data;
-  std::string node_name = ros::this_node::getName();
-  std::string fullParamName = node_name+"/"+"thread_priority";
-  int priority;
-	if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
-    if (nh->hasParam(fullParamName))
-    {
-      nh->getParam(fullParamName, priority);
-      if(priority == 2){
-        if (arv_make_thread_realtime (10)){
-          ROS_INFO_NAMED (NAME, "Set stream thread to realtime priority");
-        }
-        else{
-          ROS_WARN_NAMED (NAME, "Couldn't set stream thread to realtime priority");
-        }
-      }
-  		else if(priority == 1){
-        if(arv_make_thread_high_priority (-10)){
-          ROS_INFO_NAMED (NAME, "Set stream thread to high priority");
-        }
-        else{
-          ROS_WARN_NAMED (NAME, "Couldn't set stream thread to high priority");
-        }
-      }
-  		else{
-        ROS_INFO_NAMED (NAME, "Set stream thread to normal priority");
-      }
-    }
-  }*/
   return;
 }
 
@@ -604,7 +574,6 @@ void CameraNode::ControlLost_callback (ArvGvDevice *pGvDevice, gpointer* data)
 gboolean CameraNode::SoftwareTrigger_callback (void *device)
 {
     arv_device_execute_command ((ArvDevice *)device, "TriggerSoftware");
-
     return TRUE;
 }
 
@@ -808,86 +777,6 @@ void CameraNode::PrintDOMTree(ArvGc *pGenicam, NODEEX nodeex, int nIndent, bool 
     }
 } //PrintDOMTree()
 
-
-// WriteCameraFeaturesFromRosparam()
-// Read ROS parameters from this node's namespace, and see if each parameter has a similarly named & typed feature in the camera.  Then set the
-// camera feature to that value.  For example, if the parameter camnode/Gain is set to 123.0, then we'll write 123.0 to the Gain feature
-// in the camera.
-//
-// Note that the datatype of the parameter *must* match the datatype of the camera feature, and this can be determined by
-// looking at the camera's XML file.  Camera enum's are string parameters, camera bools are false/true parameters (not 0/1),
-// integers are integers, doubles are doubles, etc.
-//
-void CameraNode::WriteCameraFeaturesFromRosparam(ros::NodeHandle& nh)
-{
-    XmlRpc::XmlRpcValue	 			 xmlrpcParams;
-    XmlRpc::XmlRpcValue::iterator	 iter;
-    ArvGcNode						*pGcNode;
-    GError							*error=NULL;
-
-
-    nh.getParam (ros::this_node::getNamespace(), xmlrpcParams);
-
-    if (xmlrpcParams.getType() == XmlRpc::XmlRpcValue::TypeStruct)
-    {
-        for (iter=xmlrpcParams.begin(); iter!=xmlrpcParams.end(); iter++)
-        {
-            std::string		key = iter->first;
-
-            pGcNode = arv_device_get_feature (pDevice, key.c_str());
-            if (pGcNode && arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error))
-            {
-                //				unsigned long	typeValue = arv_gc_feature_node_get_value_type((ArvGcFeatureNode *)pGcNode);
-                //				ROS_INFO_NAMED (NAME, "%s cameratype=%lu, rosparamtype=%d", key.c_str(), typeValue, static_cast<int>(iter->second.getType()));
-
-                // We'd like to check the value types too, but typeValue is often given as G_TYPE_INVALID, so ignore it.
-                switch (iter->second.getType())
-                {
-                case XmlRpc::XmlRpcValue::TypeBoolean://if ((iter->second.getType()==XmlRpc::XmlRpcValue::TypeBoolean))// && (typeValue==G_TYPE_INT64))
-                {
-                    int			value = (bool)iter->second;
-                    arv_device_set_integer_feature_value(pDevice, key.c_str(), value);
-                    ROS_INFO_NAMED (NAME, "Read parameter (bool) %s: %d", key.c_str(), value);
-                }
-                    break;
-
-                case XmlRpc::XmlRpcValue::TypeInt: //if ((iter->second.getType()==XmlRpc::XmlRpcValue::TypeInt))// && (typeValue==G_TYPE_INT64))
-                {
-                    int			value = (int)iter->second;
-                    arv_device_set_integer_feature_value(pDevice, key.c_str(), value);
-                    ROS_INFO_NAMED (NAME, "Read parameter (int) %s: %d", key.c_str(), value);
-                }
-                    break;
-
-                case XmlRpc::XmlRpcValue::TypeDouble: //if ((iter->second.getType()==XmlRpc::XmlRpcValue::TypeDouble))// && (typeValue==G_TYPE_DOUBLE))
-                {
-                    double		value = (double)iter->second;
-                    arv_device_set_float_feature_value(pDevice, key.c_str(), value);
-                    ROS_INFO_NAMED (NAME, "Read parameter (float) %s: %f", key.c_str(), value);
-                }
-                    break;
-
-                case XmlRpc::XmlRpcValue::TypeString: //if ((iter->second.getType()==XmlRpc::XmlRpcValue::TypeString))// && (typeValue==G_TYPE_STRING))
-                {
-                    std::string	value = (std::string)iter->second;
-                    arv_device_set_string_feature_value(pDevice, key.c_str(), value.c_str());
-                    ROS_INFO_NAMED (NAME, "Read parameter (string) %s: %s", key.c_str(), value.c_str());
-                }
-                    break;
-
-                case XmlRpc::XmlRpcValue::TypeInvalid:
-                case XmlRpc::XmlRpcValue::TypeDateTime:
-                case XmlRpc::XmlRpcValue::TypeBase64:
-                case XmlRpc::XmlRpcValue::TypeArray:
-                case XmlRpc::XmlRpcValue::TypeStruct:
-                default:
-		    ROS_WARN_NAMED (NAME, "Unhandled rosparam type in WriteCameraFeaturesFromRosparam()");
-                }
-            }
-        }
-    }
-} // WriteCameraFeaturesFromRosparam()
-
 const char* CameraNode::GetPixelEncoding(ArvPixelFormat pixel_format)
 {
   // TODO: this is a table, it should not be implemented as structured code. Const array/vector lookup?
@@ -1073,11 +962,6 @@ void CameraNode::Start()
         ROS_INFO_NAMED (NAME, "Opened: %s-%s", arv_device_get_string_feature_value (pDevice, "DeviceVendorName"), arv_device_get_string_feature_value (pDevice, "DeviceID"));
 
         std::string node_name = ros::this_node::getName();
-        /*std::vector< std::string > paramNames;
-        nh.getParamNames(paramNames);
-        for(std::vector< std::string >::iterator it = paramNames.begin(); it != paramNames.end(); it++){
-          ROS_INFO_NAMED (NAME, "%s", (*it).c_str());
-        }*/
         std::string fullParamName = node_name+"/frame_id";
         if (nh.hasParam(fullParamName))
         {
@@ -1089,6 +973,11 @@ void CameraNode::Start()
         arv_camera_get_height_bounds		(pCamera, &heightRoiMin, &heightRoiMax);
         arv_camera_get_region (pCamera, &xRoi, &yRoi, &widthRoi, &heightRoi);
         pszPixelformat   		= GetPixelEncoding(arv_camera_get_pixel_format(pCamera));
+        if(!pszPixelformat)
+        {
+            pszPixelformat = g_string_ascii_down(g_string_new(arv_device_get_string_feature_value(pDevice, "PixelFormat")))->str;
+            ROS_WARN_NAMED (NAME, "Pixelformat %s unsupported", pszPixelformat);
+        }
         nBytesPixel      		= ARV_PIXEL_FORMAT_BYTE_PER_PIXEL(arv_device_get_integer_feature_value(pDevice, "PixelFormat"));
         
         // Print information.
@@ -1213,70 +1102,8 @@ void CameraNode::Start()
         //dynamic_reconfigure::Server<Config>::CallbackType      reconfigureCallback;
 	//reconfigureCallback = boost::bind(&CameraNode::RosReconfigure_callback, this,  _1, _2);
 //        ros::Duration(2.0).sleep();
-
-        // See if some basic camera features exist.
-        /*pGcNode = arv_device_get_feature (pDevice, "AcquisitionMode");
-        isImplementedAcquisitionMode = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "GainRaw");
-        isImplementedGain = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-        pGcNode = arv_device_get_feature (pDevice, "Gain");
-        isImplementedGain |= ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        //pGcNode = arv_device_get_feature (pDevice, "ExposureTimeAbs");
-        //isImplementedExposureTimeAbs = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "ExposureAuto");
-        isImplementedExposureAuto = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "GainAuto");
-        isImplementedGainAuto = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "TriggerSelector");
-        isImplementedTriggerSelector = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "TriggerSource");
-        isImplementedTriggerSource = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "TriggerMode");
-        isImplementedTriggerMode = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "FocusPos");
-        isImplementedFocusPos = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "GevSCPSPacketSize");
-        isImplementedMtu = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-        pGcNode = arv_device_get_feature (pDevice, "AcquisitionFrameRateEnableBinning");
-        isImplementedAcquisitionFrameRateEnable = ARV_GC_FEATURE_NODE (pGcNode) ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-
-	isImplementedBinning = arv_camera_is_binning_available(pCamera);
-
-        // Find the key name for framerate.
-        keyAcquisitionFrameRate = NULL;
-        for (i=0; i<2; i++)
-        {
-            pGcNode = arv_device_get_feature (pDevice, pkeyAcquisitionFrameRate[i]);
-            isImplementedAcquisitionFrameRate = pGcNode ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-            if (isImplementedAcquisitionFrameRate)
-            {
-                keyAcquisitionFrameRate = pkeyAcquisitionFrameRate[i];
-                break;
-            }
-        }
-        
-        // Find the key name for exposure time.
-        keyExposureTime = NULL;
-        for (i=0; i<2; i++)
-        {
-            pGcNode = arv_device_get_feature (pDevice, pkeyExposureTime[i]);
-            isImplementedExposureTimeAbs = pGcNode ? arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error) : FALSE;
-            if (isImplementedExposureTimeAbs)
-            {
-                keyExposureTime = pkeyExposureTime[i];
-                break;
-            }
-        }
+/*
+        	isImplementedBinning = arv_camera_is_binning_available(pCamera);
 
         // Get parameter bounds.
         arv_camera_get_exposure_time_bounds	(pCamera, &configMin.ExposureTimeAbs, &configMax.ExposureTimeAbs);
@@ -1285,164 +1112,8 @@ void CameraNode::Start()
         arv_camera_get_width_bounds			(pCamera, &widthRoiMin, &widthRoiMax);
         arv_camera_get_height_bounds		(pCamera, &heightRoiMin, &heightRoiMax);
 
-	dxMin=1; dxMax=1; dyMin=1; dyMax=1;
-	if (isImplementedBinning)
-	{
-	    arv_camera_get_x_binning_bounds(pCamera, &dxMin, &dxMax);
-	    arv_camera_get_y_binning_bounds(pCamera, &dyMin, &dyMax);
-	}
-
-        if (isImplementedFocusPos)
-        {
-            gint64 focusMin64, focusMax64;
-            arv_device_get_integer_feature_bounds (pDevice, "FocusPos", &focusMin64, &focusMax64);
-            configMin.FocusPos = focusMin64;
-            configMax.FocusPos = focusMax64;
-        }
-        else
-        {
-            configMin.FocusPos = 0;
-            configMax.FocusPos = 0;
-        }
-
-        configMin.AcquisitionFrameRate =    0.0;
-        configMax.AcquisitionFrameRate = 1000.0;
-
-        // Initial camera settings
-	// TODO: for now these are the only parameters that can be set without dynamic reconfigure
-	// TODO: using getParam to not set a value when it is undefined is a little jenky, use nh.param with defaults instead?
-	nh.getParam("ExposureTimeAbs", config.ExposureTimeAbs);
-	nh.getParam("Gain", config.Gain);
-	nh.getParam("AcquisitionFrameRate", config.AcquisitionFrameRate);
-	nh.getParam("Binning", config.Binning);
-	nh.getParam("mtu", config.mtu);
 	//reconfigureServer.updateConfig(config); // sync up with dynamic reconfig so everyone has the same config
-
-	if (isImplementedMtu)
-		arv_camera_gv_set_packet_size(pCamera, config.mtu);
-
-        if (isImplementedExposureTimeAbs)
-            arv_device_set_float_feature_value(pDevice, keyExposureTime, config.ExposureTimeAbs);
-        if (isImplementedGain)
-            arv_camera_set_gain(pCamera, config.Gain);
-        //arv_device_set_integer_feature_value(pDevice, "GainRaw", config.GainRaw);
-        if (isImplementedAcquisitionFrameRateEnable)
-            arv_device_set_integer_feature_value(pDevice, "AcquisitionFrameRateEnable", 1);
-        if (isImplementedAcquisitionFrameRate)
-            arv_device_set_float_feature_value(pDevice, keyAcquisitionFrameRate, config.AcquisitionFrameRate);
-	if(isImplementedBinning)
-	{
-	    if(config.Binning == "Full")
-	    {
-	        if (dxMin <= 1 && dxMax >= 1 && dyMin <= 1 && dyMax >= 1)
-		{
-		    arv_camera_set_binning(pCamera, 1, 1);
-		    ROS_INFO_NAMED (NAME, "Setting Full Binning");
-		}
-		else
-		{
-		    ROS_ERROR_NAMED (NAME, "Full Binning is not supported, this is weird");
-		}
-	    }
-	    else if (config.Binning == "Half")
-	    {
-	        if (dxMin <= 2 && dxMax >= 2 && dyMin <= 2 && dyMax >= 2)
-		{
-		    arv_camera_set_binning(pCamera, 2, 2);
-		    ROS_INFO_NAMED (NAME, "Setting Half Binning");
-		}
-		else
-		{
-		    ROS_ERROR_NAMED (NAME, "Half Binning is not supported");
-		}
-	    }
-	    else
-	    {
-	        ROS_ERROR_NAMED (NAME, "Binning configuration is not implemented");
-	    }
-	}
-
-        // Set up the triggering.
-        if (isImplementedTriggerMode)
-        {
-            if (isImplementedTriggerSelector && isImplementedTriggerMode)
-            {
-                arv_device_set_string_feature_value(pDevice, "TriggerSelector", "AcquisitionStart");
-                arv_device_set_string_feature_value(pDevice, "TriggerMode", "Off");
-                arv_device_set_string_feature_value(pDevice, "TriggerSelector", "FrameStart");
-                arv_device_set_string_feature_value(pDevice, "TriggerMode", "Off");
-            }
-        }
-
-
-	// TODO: why are we writing the ros params?
-        // WriteCameraFeaturesFromRosparam (nh);
-
-        // Get parameter current values.
-        xRoi=0; yRoi=0; widthRoi=0; heightRoi=0;
-	dx=1; dy=1;
-	arv_camera_get_binning(pCamera, &dx, &dy);
-    
-        arv_camera_get_region (pCamera, &xRoi, &yRoi, &widthRoi, &heightRoi);
-        config.ExposureTimeAbs 	= isImplementedExposureTimeAbs ? arv_device_get_float_feature_value (pDevice, keyExposureTime) : 0;
-        config.Gain      		= isImplementedGain ? arv_camera_get_gain (pCamera) : 0.0;
-        pszPixelformat   		= GetPixelEncoding(arv_camera_get_pixel_format(pCamera));
-        if(!pszPixelformat)
-        {
-            pszPixelformat = g_string_ascii_down(g_string_new(arv_device_get_string_feature_value(pDevice, "PixelFormat")))->str;
-            ROS_WARN_NAMED (NAME, "Pixelformat %s unsupported", pszPixelformat);
-        }
-
-        nBytesPixel      		= ARV_PIXEL_FORMAT_BYTE_PER_PIXEL(arv_device_get_integer_feature_value(pDevice, "PixelFormat"));
-        config.FocusPos  		= isImplementedFocusPos ? arv_device_get_integer_feature_value (pDevice, "FocusPos") : 0;
-
-
-        // Print information.
-        ROS_INFO_NAMED (NAME, "    Using Camera Configuration:");
-        ROS_INFO_NAMED (NAME, "    ---------------------------");
-        ROS_INFO_NAMED (NAME, "    Vendor name          = %s", arv_device_get_string_feature_value (pDevice, "DeviceVendorName"));
-        ROS_INFO_NAMED (NAME, "    Model name           = %s", arv_device_get_string_feature_value (pDevice, "DeviceModelName"));
-        ROS_INFO_NAMED (NAME, "    Device id            = %s", arv_device_get_string_feature_value (pDevice, "DeviceID"));
-        ROS_INFO_NAMED (NAME, "    Sensor width         = %d", widthSensor);
-        ROS_INFO_NAMED (NAME, "    Sensor height        = %d", heightSensor);
-        ROS_INFO_NAMED (NAME, "    ROI x,y,w,h          = %d, %d, %d, %d", xRoi, yRoi, widthRoi, heightRoi);
-        ROS_INFO_NAMED (NAME, "    Pixel format         = %s", pszPixelformat);
-        ROS_INFO_NAMED (NAME, "    BytesPerPixel        = %d", nBytesPixel);
-        ROS_INFO_NAMED (NAME, "    Acquisition Mode     = %s", isImplementedAcquisitionMode ? arv_device_get_string_feature_value (pDevice, "AcquisitionMode") : "(not implemented in camera)");
-        ROS_INFO_NAMED (NAME, "    Trigger Mode         = %s", isImplementedTriggerMode ? arv_device_get_string_feature_value (pDevice, "TriggerMode") : "(not implemented in camera)");
-        ROS_INFO_NAMED (NAME, "    Trigger Source       = %s", isImplementedTriggerSource ? arv_device_get_string_feature_value(pDevice, "TriggerSource") : "(not implemented in camera)");
-        ROS_INFO_NAMED (NAME, "    Can set FrameRate:     %s", isImplementedAcquisitionFrameRate ? "True" : "False");
-        if (isImplementedAcquisitionFrameRate)
-        {
-            config.AcquisitionFrameRate = arv_device_get_float_feature_value (pDevice, keyAcquisitionFrameRate);
-            ROS_INFO_NAMED (NAME, "    AcquisitionFrameRate = %g hz", config.AcquisitionFrameRate);
-        }
-        if (isImplementedBinning)
-        {
-	    ROS_INFO_NAMED (NAME, "    Bin ranges [x], [y]  = [%d to %d], [%d to %d]", dxMin, dxMax, dyMin, dyMax);
-	    ROS_INFO_NAMED (NAME, "    Binning x, y         = %d, %d", dx, dy);
-	}
-
-        ROS_INFO_NAMED (NAME, "    Can set Exposure:      %s", isImplementedExposureTimeAbs ? "True" : "False");
-        if (isImplementedExposureTimeAbs)
-        {
-            ROS_INFO_NAMED (NAME, "    Can set ExposureAuto:  %s", isImplementedExposureAuto ? "True" : "False");
-            ROS_INFO_NAMED (NAME, "    Exposure             = %g us in range [%g,%g]", config.ExposureTimeAbs, configMin.ExposureTimeAbs, configMax.ExposureTimeAbs);
-        }
-
-        ROS_INFO_NAMED (NAME, "    Can set Gain:          %s", isImplementedGain ? "True" : "False");
-        if (isImplementedGain)
-        {
-            ROS_INFO_NAMED (NAME, "    Can set GainAuto:      %s", isImplementedGainAuto ? "True" : "False");
-            ROS_INFO_NAMED (NAME, "    Gain                 = %f %% in range [%f,%f]", config.Gain, configMin.Gain, configMax.Gain);
-        }
-
-        ROS_INFO_NAMED (NAME, "    Can set FocusPos:      %s", isImplementedFocusPos ? "True" : "False");
-
-        if (isImplementedMtu)
-            ROS_INFO_NAMED (NAME, "    Network mtu          = %lu", arv_device_get_integer_feature_value(pDevice, "GevSCPSPacketSize"));
-
-        ROS_INFO_NAMED (NAME, "    ---------------------------");
+  //reconfigureServer.setCallback(reconfigureCallback);
 
 */
 	// Print the tree of camera features, with their values.
@@ -1460,10 +1131,6 @@ void CameraNode::Start()
 
         // Start the camerainfo manager.
         pCameraInfoManager = new camera_info_manager::CameraInfoManager(nh, arv_device_get_string_feature_value (pDevice, "DeviceID"));
-
-	// TODO: some camera config changed from when parameters were set, should we sync up the config with the current camera settings? or just keep them at what was requested?
-	//reconfigureServer.updateConfig(config);
-	//reconfigureServer.setCallback(reconfigureCallback);
 
         ArvGvStream *pStream = NULL;
         while (TRUE)
@@ -1493,7 +1160,6 @@ void CameraNode::Start()
         
         // Set up image_raw.
         image_transport::ImageTransport		*pTransport = new image_transport::ImageTransport(nh);
-//        publisher = pTransport->advertiseCamera("image_raw", 1);
         publisher = pTransport->advertiseCamera("image_raw", 1);
         
         applicationData.cam_stats_pub = nh.advertise<CamStats>("statistics", 10);

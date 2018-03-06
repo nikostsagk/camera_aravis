@@ -128,16 +128,6 @@ class CameraNode
   void PrintDOMTree(ArvGc *pGenicam, NODEEX nodeex, int nIndent, bool debug=false);
   
   bool setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type);
-  // WriteCameraFeaturesFromRosparam()
-  // Read ROS parameters from this node's namespace, and see if each parameter has a similarly named & typed feature in the camera.  Then set the
-  // camera feature to that value.  For example, if the parameter camnode/Gain is set to 123.0, then we'll write 123.0 to the Gain feature
-  // in the camera.
-  //
-  // Note that the datatype of the parameter *must* match the datatype of the camera feature, and this can be determined by
-  // looking at the camera's XML file.  Camera enum's are string parameters, camera bools are false/true parameters (not 0/1),
-  // integers are integers, doubles are doubles, etc.
-  //
-  void WriteCameraFeaturesFromRosparam(ros::NodeHandle &nh);
 
   const char* GetPixelEncoding(ArvPixelFormat pixel_format);
 
