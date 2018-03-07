@@ -15,8 +15,62 @@ const char* CameraNode::szBufferStatusFromInt[] = {
   "ARV_BUFFER_STATUS_ABORTED"
 };
 
-bool CameraNode::setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type){
-  bool success = false;
+std::string CameraNode::setCameraFeature(std::string featureName, std::string featureVal){
+  arv_device_set_string_feature_value (pDevice, featureName.c_str(), featureVal.c_str());
+  std::string valFromCam = arv_device_get_string_feature_value (pDevice, featureName.c_str());
+  if(valFromCam == featureVal){
+    ROS_INFO_NAMED (NAME, "%s = %s", featureName.c_str(), valFromCam.c_str());
+  }
+  else{
+    ROS_WARN_NAMED (NAME, "%s couldn't be set to %s, instead set to %s", featureName.c_str(), featureVal.c_str(), valFromCam.c_str());
+  }
+  return valFromCam;
+}
+
+int CameraNode::setCameraFeature(std::string featureName, int featureVal){
+  arv_device_set_integer_feature_value (pDevice,featureName.c_str(),featureVal);
+  int valFromCam = arv_device_get_integer_feature_value (pDevice, featureName.c_str());
+  if(valFromCam == featureVal){
+    ROS_INFO_NAMED (NAME, "%s = %d", featureName.c_str(), valFromCam);
+  }
+  else{
+    ROS_WARN_NAMED (NAME, "%s couldn't be set to %d, instead set to %d", featureName.c_str(), featureVal, valFromCam);
+  }
+  return valFromCam;
+}
+
+double CameraNode::setCameraFeature(std::string featureName, double featureVal){
+  arv_device_set_float_feature_value (pDevice,featureName.c_str(),featureVal);
+  double valFromCam = arv_device_get_float_feature_value (pDevice, featureName.c_str());
+  if(valFromCam == featureVal){
+    ROS_INFO_NAMED (NAME, "%s = %f", featureName.c_str(), valFromCam);
+  }
+  else{
+    ROS_WARN_NAMED (NAME, "%s couldn't be set to %f, instead set to %f", featureName.c_str(), featureVal, valFromCam);
+  }
+  return valFromCam;
+}
+
+bool CameraNode::setCameraFeature(std::string featureName, bool featureVal){
+  gboolean gfeatureVal;
+  if (featureVal == true){
+    gfeatureVal = true;
+  }
+  else{
+    gfeatureVal = false;
+  }
+  arv_device_set_boolean_feature_value (pDevice,featureName.c_str(),gfeatureVal);
+  gboolean valFromCam = arv_device_get_boolean_feature_value (pDevice, featureName.c_str());
+  if(valFromCam == gfeatureVal){
+    ROS_INFO_NAMED (NAME, "%s = %s", featureName.c_str(), valFromCam?"True":"False");
+  }
+  else{
+    ROS_WARN_NAMED (NAME, "%s couldn't be set to %s, instead set to %s", featureName.c_str(), gfeatureVal?"True":"False", valFromCam?"True":"False");
+  }
+  return valFromCam;
+}
+
+void CameraNode::setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type){
   std::string node_name = ros::this_node::getName();
   std::string fullParamName = node_name+"/"+paramName;
   if (nh.hasParam(fullParamName))
@@ -24,64 +78,30 @@ bool CameraNode::setFeatureFromParam(ros::NodeHandle &nh, std::string paramName,
     if(type == "str"){
       std::string strFeature;
       nh.getParam(fullParamName, strFeature);
-      arv_device_set_string_feature_value (pDevice,paramName.c_str(),strFeature.c_str());
-      std::string valFromCam = arv_device_get_string_feature_value (pDevice, paramName.c_str());
-      if(valFromCam == strFeature){
-        success = true;
-        ROS_INFO_NAMED (NAME, "%s = %s", paramName.c_str(), valFromCam.c_str());
-      }
-      else{
-        ROS_WARN_NAMED (NAME, "%s couldn't be set to %s, instead set to %s", paramName.c_str(), strFeature.c_str(), valFromCam.c_str());
-      }
+      setCameraFeature(paramName, strFeature);
     }
     else if(type == "int"){
       int intFeature;
       nh.getParam(fullParamName, intFeature);
-      arv_device_set_integer_feature_value (pDevice,paramName.c_str(),intFeature);
-      int valFromCam = arv_device_get_integer_feature_value (pDevice, paramName.c_str());
-      if(valFromCam == intFeature){
-        success = true;
-        ROS_INFO_NAMED (NAME, "%s = %d", paramName.c_str(), valFromCam);
-      }
-      else{
-        ROS_WARN_NAMED (NAME, "%s couldn't be set to %d, instead set to %d", paramName.c_str(), intFeature, valFromCam);
-      }
+      setCameraFeature(paramName, intFeature);
     }
     else if(type == "float"){
       double floatFeature;
       nh.getParam(fullParamName, floatFeature);
-      arv_device_set_float_feature_value (pDevice,paramName.c_str(),floatFeature);
-      double valFromCam = arv_device_get_float_feature_value (pDevice, paramName.c_str());
-      if(valFromCam == floatFeature){
-        success = true;
-        ROS_INFO_NAMED (NAME, "%s = %f", paramName.c_str(), valFromCam);
-      }
-      else{
-        ROS_WARN_NAMED (NAME, "%s couldn't be set to %f, instead set to %f", paramName.c_str(), floatFeature, valFromCam);
-      }
+      setCameraFeature(paramName, floatFeature);
     }
     else if(type == "bool"){
-      gboolean boolFeature;
+      bool boolFeature;
       nh.getParam(fullParamName, boolFeature);
-      arv_device_set_boolean_feature_value (pDevice,paramName.c_str(),boolFeature);
-      gboolean valFromCam = arv_device_get_boolean_feature_value (pDevice, paramName.c_str());
-      if(valFromCam == boolFeature){
-        success = true;
-        ROS_INFO_NAMED (NAME, "%s = %s", paramName.c_str(), valFromCam?"True":"False");
-      }
-      else{
-        ROS_WARN_NAMED (NAME, "%s couldn't be set to %s, instead set to %s", paramName.c_str(), boolFeature?"True":"False", valFromCam?"True":"False");
-      }
+      setCameraFeature(paramName, boolFeature);
     }
     else{
       ROS_WARN_NAMED (NAME, "Invalid type %s for camera feature %s", type.c_str(), paramName.c_str());
     }
-    
   }
   else{
     ROS_WARN_NAMED (NAME, "Parameter %s doesn't exist", paramName.c_str());
   }
-  return success;
 } //setFeatureFromParam()
 
 ArvGvStream* CameraNode::CreateStream(ros::NodeHandle &nh)
@@ -158,93 +178,56 @@ ArvGvStream* CameraNode::CreateStream(ros::NodeHandle &nh)
 } // CreateStream()
 
 
-
-void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
-{
-    int             changedAcquire;
-    int             changedAcquisitionFrameRate;
-    int             changedExposureAuto;
-    int             changedGainAuto;
-    int             changedExposureTimeAbs;
-    int             changedGain;
+/*
+void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, uint32_t level)
+{    
     int             changedAcquisitionMode;
-    int             changedTriggerMode;
-    int             changedTriggerSource;
-    int             changedSoftwarerate;
-    int             changedFrameid;
-    int             changedFocusPos;
+    int             changedAcquisitionFrameRate;
+    int             changedExposureTime;
+    int             changedExposureAuto;
+    int             changedAutoExposureTimeLowerLimit;
+    int             changedAutoExposureTimeUpperLimit;
+    int             changedGain;
+    int             changedGainAuto;
+    int             changedAutoGainLowerLimit;
+    int             changedAutoGainUpperLimit;
     int             changedMtu;
-    int             changedBinning;
-
-    if (newconfig.frame_id == "")
-        newconfig.frame_id = "camera";
-
 
     // Find what the user changed.
-    changedAcquire    			= (newconfig.Acquire != config.Acquire);
-    changedAcquisitionFrameRate         = (newconfig.AcquisitionFrameRate != config.AcquisitionFrameRate);
-    changedExposureAuto 		= (newconfig.ExposureAuto != config.ExposureAuto);
-    changedExposureTimeAbs  	        = (newconfig.ExposureTimeAbs != config.ExposureTimeAbs);
-    changedGainAuto     		= (newconfig.GainAuto != config.GainAuto);
-    changedGain         		= (newconfig.Gain != config.Gain);
-    changedAcquisitionMode 		= (newconfig.AcquisitionMode != config.AcquisitionMode);
-    changedTriggerMode  		= (newconfig.TriggerMode != config.TriggerMode);
-    changedTriggerSource		= (newconfig.TriggerSource != config.TriggerSource);
-    changedSoftwarerate  		= (newconfig.softwaretriggerrate != config.softwaretriggerrate);
-    changedFrameid      		= (newconfig.frame_id != config.frame_id);
-    changedFocusPos     		= (newconfig.FocusPos != config.FocusPos);
-    changedMtu          		= (newconfig.mtu != config.mtu);
-    changedBinning          		= (newconfig.Binning != config.Binning);
-
-    // Limit params to legal values.
-    newconfig.AcquisitionFrameRate      = CLIP(newconfig.AcquisitionFrameRate,         configMin.AcquisitionFrameRate, 	configMax.AcquisitionFrameRate);
-    newconfig.ExposureTimeAbs      	= CLIP(newconfig.ExposureTimeAbs,  	configMin.ExposureTimeAbs,  		configMax.ExposureTimeAbs);
-    newconfig.Gain          		= CLIP(newconfig.Gain,          		configMin.Gain,         			configMax.Gain);
-    newconfig.FocusPos       		= CLIP(newconfig.FocusPos,      		configMin.FocusPos,      		    configMax.FocusPos);
-
+    changedAcquisitionMode    			= (newconfig.AcquisitionMode != configPointgrey.AcquisitionMode);
+    changedAcquisitionFrameRate         = (newconfig.AcquisitionFrameRate != configPointgrey.AcquisitionFrameRate);
+    
+    changedExposureTime = (newconfig.ExposureTime != configPointgrey.ExposureTime);
+    changedExposureAuto 		= (newconfig.ExposureAuto != configPointgrey.ExposureAuto);
+    changedAutoExposureTimeLowerLimit = (newconfig.AutoExposureTimeLowerLimit != configPointgrey.AutoExposureTimeLowerLimit);
+    changedAutoExposureTimeUpperLimit = (newconfig.AutoExposureTimeUpperLimit != configPointgrey.AutoExposureTimeUpperLimit);
+    
+    changedGain         		= (newconfig.Gain != configPointgrey.Gain);
+    changedGainAuto     		= (newconfig.GainAuto != configPointgrey.GainAuto);
+    changedAutoGainLowerLimit = (newconfig.AutoGainLowerLimit != configPointgrey.AutoGainLowerLimit);
+    changedAutoGainUpperLimit = (newconfig.AutoGainUpperLimit != configPointgrey.AutoGainUpperLimit);
+    
+    changedMtu          		= (newconfig.GevSCPSPacketSize != configPointgrey.GevSCPSPacketSize);
 
     // Adjust other controls dependent on what the user changed.
-    if (changedExposureTimeAbs || changedGainAuto || ((changedAcquisitionFrameRate || changedGain || changedFrameid
-                                                       || changedAcquisitionMode || changedTriggerSource || changedSoftwarerate) && newconfig.ExposureAuto=="Once"))
-        newconfig.ExposureAuto = "Off";
-
-    if (changedGain || changedExposureAuto || ((changedAcquisitionFrameRate || changedExposureTimeAbs || changedFrameid
-                                                || changedAcquisitionMode || changedTriggerSource || changedSoftwarerate) && newconfig.GainAuto=="Once"))
-        newconfig.GainAuto = "Off";
-
-    if (changedAcquisitionFrameRate)
-        newconfig.TriggerMode = "Off";
-
-
-    // Find what changed for any reason.
-    changedAcquire    			= (newconfig.Acquire != config.Acquire);
-    changedAcquisitionFrameRate = (newconfig.AcquisitionFrameRate != config.AcquisitionFrameRate);
-    changedExposureAuto 		= (newconfig.ExposureAuto != config.ExposureAuto);
-    changedExposureTimeAbs     	= (newconfig.ExposureTimeAbs != config.ExposureTimeAbs);
-    changedGainAuto     		= (newconfig.GainAuto != config.GainAuto);
-    changedGain            		= (newconfig.Gain != config.Gain);
-    changedAcquisitionMode 		= (newconfig.AcquisitionMode != config.AcquisitionMode);
-    changedTriggerMode  		= (newconfig.TriggerMode != config.TriggerMode);
-    changedTriggerSource		= (newconfig.TriggerSource != config.TriggerSource);
-    changedSoftwarerate  		= (newconfig.softwaretriggerrate != config.softwaretriggerrate);
-    changedFrameid      		= (newconfig.frame_id != config.frame_id);
-    changedFocusPos     		= (newconfig.FocusPos != config.FocusPos);
-    changedMtu          		= (newconfig.mtu != config.mtu);
-    changedBinning          		= (newconfig.Binning != config.Binning);
-
-
-    // Set params into the camera.
-    if (changedExposureTimeAbs)
-    {
-        if (isImplementedExposureTimeAbs)
-        {
-	  ROS_INFO_NAMED (NAME, "Set ExposureTimeAbs = %f", newconfig.ExposureTimeAbs);
-            arv_device_set_float_feature_value (pDevice, keyExposureTime, newconfig.ExposureTimeAbs);
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support ExposureTimeAbs.");
+    if (changedExposureTime || changedGain){
+      newconfig.ExposureAuto = "Off";
+      newconfig.GainAuto = "Off";
     }
-
+    changedExposureAuto 		= (newconfig.ExposureAuto != configPointgrey.ExposureAuto);
+    changedGainAuto     		= (newconfig.GainAuto != configPointgrey.GainAuto);
+    
+    // Set params into the camera.
+    if (changedAcquisitionMode)
+    {
+      newconfig.AcquisitionMode = setCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+    }
+    
+    if (changedAcquisitionFrameRate)
+    {
+      newconfig.AcquisitionFrameRate = setCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
+    }
+    
     if (changedGain)
     {
         if (isImplementedGain)
@@ -449,7 +432,7 @@ void CameraNode::RosReconfigure_callback(Config &newconfig, uint32_t level)
 
     config = newconfig;
 
-} // RosReconfigure_callback()
+} // RosReconfigure_callback()*/
 
 void CameraNode::stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 {
@@ -538,7 +521,7 @@ void CameraNode::NewBuffer_callback (ArvStream *pStream, gpointer* data)
             // Construct the image message.
             msg.header.stamp.fromNSec(tn);
             msg.header.seq = arv_buffer_get_frame_id (pBuffer);
-            msg.header.frame_id = This->config.frame_id;
+            msg.header.frame_id = This->frame_id;
             msg.width = This->widthRoi;
             msg.height = This->heightRoi;
             msg.encoding = This->pszPixelformat;
@@ -867,8 +850,6 @@ void CameraNode::Start()
     int			 nInterfaces = 0;
     int			 nDevices = 0;
     int 		 i = 0;
-    const char	*pkeyAcquisitionFrameRate[2] = {"AcquisitionFrameRate", "AcquisitionFrameRateAbs"};
-    const char	*pkeyExposureTime[2] = {"ExposureTimeAbs", "ExposureTime"};
     ArvGcNode	*pGcNode;
     GError		*error=NULL;
 
@@ -912,8 +893,6 @@ void CameraNode::Start()
     
     bCancel = FALSE;
 
-    // TODO: support parameters, not just dynamic reconfigure
-    //config = config.__getDefault__();
     idSoftwareTriggerTimer = 0;
 
     // Print out some useful info.
@@ -965,7 +944,7 @@ void CameraNode::Start()
         std::string fullParamName = node_name+"/frame_id";
         if (nh.hasParam(fullParamName))
         {
-          nh.getParam(fullParamName, config.frame_id);
+          nh.getParam(fullParamName, frame_id);
         }
         xRoi=0; yRoi=0; widthRoi=0; heightRoi=0;
         arv_camera_get_sensor_size			(pCamera, &widthSensor, &heightSensor);
@@ -973,11 +952,6 @@ void CameraNode::Start()
         arv_camera_get_height_bounds		(pCamera, &heightRoiMin, &heightRoiMax);
         arv_camera_get_region (pCamera, &xRoi, &yRoi, &widthRoi, &heightRoi);
         pszPixelformat   		= GetPixelEncoding(arv_camera_get_pixel_format(pCamera));
-        if(!pszPixelformat)
-        {
-            pszPixelformat = g_string_ascii_down(g_string_new(arv_device_get_string_feature_value(pDevice, "PixelFormat")))->str;
-            ROS_WARN_NAMED (NAME, "Pixelformat %s unsupported", pszPixelformat);
-        }
         nBytesPixel      		= ARV_PIXEL_FORMAT_BYTE_PER_PIXEL(arv_device_get_integer_feature_value(pDevice, "PixelFormat"));
         
         // Print information.
@@ -990,11 +964,17 @@ void CameraNode::Start()
         ROS_INFO_NAMED (NAME, "    Sensor height        = %d", heightSensor);
         ROS_INFO_NAMED (NAME, "    ROI x,y,w,h          = %d, %d, %d, %d", xRoi, yRoi, widthRoi, heightRoi);
         ROS_INFO_NAMED (NAME, "    Pixel format         = %s", pszPixelformat);
+        if(!pszPixelformat)
+        {
+            pszPixelformat = g_string_ascii_down(g_string_new(arv_device_get_string_feature_value(pDevice, "PixelFormat")))->str;
+            ROS_WARN_NAMED (NAME, "Pixelformat %s unsupported", pszPixelformat);
+        }
         ROS_INFO_NAMED (NAME, "    BytesPerPixel        = %d", nBytesPixel);
         
         if(node_name.find("pointgrey", 0) != std::string::npos)
         {
           ROS_INFO_NAMED (NAME, " Setting Parameters for pointgrey camera");
+          ROS_INFO_NAMED (NAME, "    ---------------------------");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRate", "float");
           setFeatureFromParam(nh, "AcquisitionFrameRateAuto", "str");
@@ -1010,10 +990,21 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          
+          // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
+          //boost::recursive_mutex config_mutex;
+          /*dynamic_reconfigure::Server<PointgreyConfig>          reconfigureServerPointgrey;
+          dynamic_reconfigure::Server<PointgreyConfig>::CallbackType      reconfigureCallbackPointgrey;
+  	      reconfigureCallbackPointgrey = boost::bind(&CameraNode::RosReconfigure_callback, this,  _1, _2);
+          ros::Duration(1.0).sleep();
+  
+          reconfigureServerPointgrey.updateConfig(configPointgrey); // sync up with dynamic reconfig so everyone has the same config
+          reconfigureServerPointgrey.setCallback(reconfigureCallbackPointgrey);*/
         }
         else  if(node_name.find("avt_mako", 0) != std::string::npos)
         {
           ROS_INFO_NAMED (NAME, " Setting Parameters for AVT Mako camera");
+          ROS_INFO_NAMED (NAME, "    ---------------------------");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRateAbs", "float");
           setFeatureFromParam(nh, "ExposureAuto", "str");
@@ -1032,6 +1023,25 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "GainAutoTarget", "int");
           setFeatureFromParam(nh, "GainAutoMin", "float");
           setFeatureFromParam(nh, "GainAutoMax", "float");
+          
+          /*config.dsp_subregion_bottom  = std::min(config.dsp_subregion_bottom,  (int)heightRoiMax);
+          config.dsp_subregion_left    = std::max(config.dsp_subregion_left, (int)0);
+          config.dsp_subregion_right   = std::min(config.dsp_subregion_right, (int)widthRoiMax);
+          config.dsp_subregion_top     = std::max(config.dsp_subregion_top, (int)0);
+
+          // If bottom is smaller than top, swap them
+          if(config.dsp_subregion_bottom < config.dsp_subregion_top){
+              int temp_buf = config.dsp_subregion_bottom;
+              config.dsp_subregion_bottom  = config.dsp_subregion_top;
+              config.dsp_subregion_top = temp_buf;
+          }
+          // If right is smaller than left, swap them
+          if(config.dsp_subregion_right < config.dsp_subregion_left){
+              int temp_buf = config.dsp_subregion_right;
+              config.dsp_subregion_right  = config.dsp_subregion_left;
+              config.dsp_subregion_left = temp_buf;
+          }*/
+          
           setFeatureFromParam(nh, "DSPSubregionLeft", "int");
           setFeatureFromParam(nh, "DSPSubregionTop", "int");
           setFeatureFromParam(nh, "DSPSubregionRight", "int");
@@ -1045,6 +1055,7 @@ void CameraNode::Start()
         else if(node_name.find("avt_prosilica", 0) != std::string::npos)
         {
           ROS_INFO_NAMED (NAME, " Setting Parameters for AVT Prosilica camera");
+          ROS_INFO_NAMED (NAME, "    ---------------------------");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRateAbs", "float");
           setFeatureFromParam(nh, "ExposureAuto", "str");
@@ -1076,6 +1087,7 @@ void CameraNode::Start()
         else if(node_name.find("ids_gv", 0) != std::string::npos)
         {  
           ROS_INFO_NAMED (NAME, " Setting Parameters for IDS camera");
+          ROS_INFO_NAMED (NAME, "    ---------------------------");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRate", "float");
           setFeatureFromParam(nh, "ExposureAuto", "str");
@@ -1097,24 +1109,11 @@ void CameraNode::Start()
         else{
           ROS_INFO_NAMED (NAME, "Default camera parameters set");
         }
-        // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
-        //dynamic_reconfigure::Server<Config>                    reconfigureServer;
-        //dynamic_reconfigure::Server<Config>::CallbackType      reconfigureCallback;
-	//reconfigureCallback = boost::bind(&CameraNode::RosReconfigure_callback, this,  _1, _2);
-//        ros::Duration(2.0).sleep();
 /*
         	isImplementedBinning = arv_camera_is_binning_available(pCamera);
-
         // Get parameter bounds.
         arv_camera_get_exposure_time_bounds	(pCamera, &configMin.ExposureTimeAbs, &configMax.ExposureTimeAbs);
         arv_camera_get_gain_bounds			(pCamera, &configMin.Gain, &configMax.Gain);
-        arv_camera_get_sensor_size			(pCamera, &widthSensor, &heightSensor);
-        arv_camera_get_width_bounds			(pCamera, &widthRoiMin, &widthRoiMax);
-        arv_camera_get_height_bounds		(pCamera, &heightRoiMin, &heightRoiMax);
-
-	//reconfigureServer.updateConfig(config); // sync up with dynamic reconfig so everyone has the same config
-  //reconfigureServer.setCallback(reconfigureCallback);
-
 */
 	// Print the tree of camera features, with their values.
 	ROS_DEBUG_NAMED (NAME, "    ----------------------------------------------------------------------------------");

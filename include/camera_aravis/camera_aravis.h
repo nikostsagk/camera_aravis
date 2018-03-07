@@ -38,7 +38,10 @@
 #include "camera_aravis/CamStats.h"
 #include <dynamic_reconfigure/server.h>
 #include <tf/transform_listener.h>
-#include <camera_aravis/CameraAravisConfig.h>
+#include <camera_aravis/CameraAravisIDSConfig.h>
+#include <camera_aravis/CameraAravisMakoConfig.h>
+#include <camera_aravis/CameraAravisProsilicaConfig.h>
+#include <camera_aravis/CameraAravisPointgreyConfig.h>
 
 #include <boost/thread.hpp>
 
@@ -79,7 +82,10 @@ const static char * NAME = "aravis";
 class CameraNode
 {
 
-  typedef camera_aravis::CameraAravisConfig Config;
+  typedef camera_aravis::CameraAravisIDSConfig IDSConfig;
+  typedef camera_aravis::CameraAravisMakoConfig MakoConfig;
+  typedef camera_aravis::CameraAravisProsilicaConfig ProsilicaConfig;
+  typedef camera_aravis::CameraAravisPointgreyConfig PointgreyConfig;
 
   typedef struct
   {
@@ -104,7 +110,7 @@ class CameraNode
 
   ArvGvStream *CreateStream(ros::NodeHandle &nh);
 
-  void RosReconfigure_callback(Config &config, uint32_t level);
+  //void RosReconfigure_callback(Config &config, uint32_t level);
   
   static void stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
   
@@ -127,7 +133,12 @@ class CameraNode
   // Walk the DOM tree, i.e. the tree represented by the XML file in the camera, and that contains all the various features, parameters, etc.
   void PrintDOMTree(ArvGc *pGenicam, NODEEX nodeex, int nIndent, bool debug=false);
   
-  bool setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type);
+  std::string setCameraFeature(std::string featureName, std::string featureVal);
+  int setCameraFeature(std::string featureName, int featureVal);
+  double setCameraFeature(std::string featureName, double featureVal);
+  bool setCameraFeature(std::string featureName, bool featureVal);
+  
+  void setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type);
 
   const char* GetPixelEncoding(ArvPixelFormat pixel_format);
 
@@ -139,26 +150,15 @@ private:
   image_transport::CameraPublisher        publisher;
   camera_info_manager::CameraInfoManager *pCameraInfoManager;
 
-  gint                                    width, height; // buffer->width and buffer->height not working, so I used a global.
-  Config                                  config;
-  Config                                  configMin;
-  Config                                  configMax;
+  IDSConfig                               configIDS;
+  MakoConfig                              configMako;
+  ProsilicaConfig                         configProsilica;
+  PointgreyConfig                         configPointgrey;
+  
   int                                     idSoftwareTriggerTimer;
-
-  int                                     isImplementedAcquisitionFrameRate;
-  int                                     isImplementedAcquisitionFrameRateEnable;
-  int                                     isImplementedGain;
-  int                                     isImplementedExposureTimeAbs;
-  int                                     isImplementedExposureAuto;
-  int                                     isImplementedGainAuto;
-  int                                     isImplementedFocusPos;
-  int                                     isImplementedTriggerSelector;
-  int                                     isImplementedTriggerSource;
-  int                                     isImplementedTriggerMode;
-  int                                     isImplementedAcquisitionMode;
-  int                                     isImplementedMtu;
-  int                                     isImplementedBinning;
-
+  
+  std::string                             frame_id;
+  
   int                                     xRoi;
   int                                     yRoi;
   int                                     widthRoi;
@@ -171,19 +171,10 @@ private:
   int                                     widthSensor;
   int                                     heightSensor;
 
-  int                                     dx, dy;
-  int                                     dxMin, dxMax;
-  int                                     dyMin, dyMax;
-
   const char                             *pszPixelformat;
   unsigned                                nBytesPixel;
   ArvCamera                              *pCamera;
   ArvDevice                              *pDevice;
-  int                                     mtu;
-  int                                     Acquire;
-  const char                             *keyAcquisitionFrameRate;
-  const char                             *keyExposureTime;
-  
 public:
   
   void Start();
