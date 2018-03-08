@@ -202,7 +202,6 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
     int             changedGainAuto;
     int             changedAutoGainLowerLimit;
     int             changedAutoGainUpperLimit;
-    int             changedMtu;
 
     // Find what the user changed.
     changedAcquisitionMode    			= (newconfig.AcquisitionMode != configPointgrey.AcquisitionMode);
@@ -218,8 +217,6 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
     changedAutoGainLowerLimit = (newconfig.AutoGainLowerLimit != configPointgrey.AutoGainLowerLimit);
     changedAutoGainUpperLimit = (newconfig.AutoGainUpperLimit != configPointgrey.AutoGainUpperLimit);
     
-    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configPointgrey.GevSCPSPacketSize_MTU);
-
     // Adjust other controls dependent on what the user changed.
     if (changedExposureTime || changedGain){
       newconfig.ExposureAuto = "Off";
@@ -295,17 +292,6 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
     {
       newconfig.AutoGainUpperLimit = setCameraFeature("AutoGainUpperLimit", newconfig.AutoGainUpperLimit);
     }
-    
-    if (changedMtu)
-    {
-      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-      ros::Duration(1.0).sleep();
-    }
-    
-    /*if (changedTriggerMode)
-    {
-      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
-    }*/
 
     getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
@@ -317,8 +303,6 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
     getCameraFeature("Gain", newconfig.Gain);
     getCameraFeature("AutoGainLowerLimit", newconfig.AutoGainLowerLimit);
     getCameraFeature("AutoGainUpperLimit", newconfig.AutoGainUpperLimit);
-    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-    getCameraFeature("TriggerMode", newconfig.TriggerMode);
     
     configPointgrey = newconfig;
 } // RosReconfigure_callback_pointgrey()
@@ -339,7 +323,6 @@ void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t leve
     int             changedBrightnessAutoGainMin;
     int             changedBrightnessAutoGainMax;
     int             changedGamma;
-    int             changedMtu;
 
     // Find what the user changed.
     changedAcquisitionMode    			= (newconfig.AcquisitionMode != configIDS.AcquisitionMode);
@@ -358,7 +341,6 @@ void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t leve
     changedBrightnessAutoGainMax = (newconfig.BrightnessAutoGainMax != configIDS.BrightnessAutoGainMax);
     
     changedGamma            = (newconfig.Gamma != configIDS.Gamma);
-    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configIDS.GevSCPSPacketSize_MTU);
 
     // Adjust other controls dependent on what the user changed.
     if (changedExposureTime || changedGain){
@@ -448,17 +430,6 @@ void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t leve
     {
       newconfig.Gamma = setCameraFeature("Gamma", newconfig.Gamma);
     }
-    
-    if (changedMtu)
-    {
-      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-      ros::Duration(1.0).sleep();
-    }
-    
-    /*if (changedTriggerMode)
-    {
-      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
-    }*/
 
     getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
@@ -472,8 +443,6 @@ void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t leve
     getCameraFeature("BrightnessAutoGainLimitMode", newconfig.BrightnessAutoGainLimitMode);
     getCameraFeature("BrightnessAutoGainMin", newconfig.BrightnessAutoGainMin);
     getCameraFeature("BrightnessAutoGainMax", newconfig.BrightnessAutoGainMax);
-    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-    getCameraFeature("TriggerMode", newconfig.TriggerMode);
     
     configIDS = newconfig;
 
@@ -505,8 +474,6 @@ void CameraNode::RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t le
     int             changedDSPSubregionRight;
     int             changedDSPSubregionBottom;
     
-    int             changedMtu;
-
     // Find what the user changed.
     changedAcquisitionMode    			= (newconfig.AcquisitionMode != configMako.AcquisitionMode);
     changedAcquisitionFrameRateAbs         = (newconfig.AcquisitionFrameRateAbs != configMako.AcquisitionFrameRateAbs);
@@ -532,8 +499,6 @@ void CameraNode::RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t le
     changedDSPSubregionTop = (newconfig.DSPSubregionTop != configMako.DSPSubregionTop);
     changedDSPSubregionRight = (newconfig.DSPSubregionRight != configMako.DSPSubregionRight);
     changedDSPSubregionBottom = (newconfig.DSPSubregionBottom != configMako.DSPSubregionBottom);
-    
-    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configMako.GevSCPSPacketSize_MTU);
 
     // Adjust other controls dependent on what the user changed.
     if (changedExposureTimeAbs || changedGain){
@@ -665,17 +630,6 @@ void CameraNode::RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t le
     {
       newconfig.DSPSubregionBottom = setCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
     }
-    
-    if (changedMtu)
-    {
-      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-      ros::Duration(1.0).sleep();
-    }
-    
-    /*if (changedTriggerMode)
-    {
-      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
-    }*/
 
     getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRateAbs", newconfig.AcquisitionFrameRateAbs);
@@ -701,9 +655,6 @@ void CameraNode::RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t le
     getCameraFeature("DSPSubregionRight", newconfig.DSPSubregionRight);
     getCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
 
-    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-    getCameraFeature("TriggerMode", newconfig.TriggerMode);
-    
     configMako = newconfig;
 } // RosReconfigure_callback_mako()
 
@@ -733,8 +684,6 @@ void CameraNode::RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, u
     int             changedDSPSubregionTop;
     int             changedDSPSubregionRight;
     int             changedDSPSubregionBottom;
-    
-    int             changedMtu;
 
     // Find what the user changed.
     changedAcquisitionMode    			= (newconfig.AcquisitionMode != configProsilica.AcquisitionMode);
@@ -762,8 +711,6 @@ void CameraNode::RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, u
     changedDSPSubregionRight = (newconfig.DSPSubregionRight != configProsilica.DSPSubregionRight);
     changedDSPSubregionBottom = (newconfig.DSPSubregionBottom != configProsilica.DSPSubregionBottom);
     
-    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configProsilica.GevSCPSPacketSize_MTU);
-
     // Adjust other controls dependent on what the user changed.
     if (changedExposureTimeAbs || changedGain){
       newconfig.ExposureAuto = "Off";
@@ -895,17 +842,6 @@ void CameraNode::RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, u
       newconfig.DSPSubregionBottom = setCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
     }
     
-    if (changedMtu)
-    {
-      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-      ros::Duration(1.0).sleep();
-    }
-    
-    /*if (changedTriggerMode)
-    {
-      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
-    }*/
-
     getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRateAbs", newconfig.AcquisitionFrameRateAbs);
     getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
@@ -929,9 +865,6 @@ void CameraNode::RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, u
     getCameraFeature("DSPSubregionTop", newconfig.DSPSubregionTop);
     getCameraFeature("DSPSubregionRight", newconfig.DSPSubregionRight);
     getCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
-
-    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
-    getCameraFeature("TriggerMode", newconfig.TriggerMode);
     
     configProsilica = newconfig;
 } // RosReconfigure_callback_prosilica()
@@ -1510,9 +1443,7 @@ void CameraNode::Start()
           getCameraFeature("Gain", configPointgrey.Gain);
           getCameraFeature("AutoGainLowerLimit", configPointgrey.AutoGainLowerLimit);
           getCameraFeature("AutoGainUpperLimit", configPointgrey.AutoGainUpperLimit);
-          getCameraFeature("GevSCPSPacketSize", configPointgrey.GevSCPSPacketSize_MTU);
-          getCameraFeature("TriggerMode", configPointgrey.TriggerMode);
-          
+
           reconfigureServerPointgrey.updateConfig(configPointgrey); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerPointgrey.setCallback(reconfigureCallbackPointgrey);
         }
@@ -1598,9 +1529,6 @@ void CameraNode::Start()
           getCameraFeature("DSPSubregionRight", configMako.DSPSubregionRight);
           getCameraFeature("DSPSubregionBottom", configMako.DSPSubregionBottom);
           
-          getCameraFeature("GevSCPSPacketSize", configMako.GevSCPSPacketSize_MTU);
-          getCameraFeature("TriggerMode", configMako.TriggerMode);
-          
           reconfigureServerMako.updateConfig(configMako); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerMako.setCallback(reconfigureCallbackMako);
         }
@@ -1667,9 +1595,6 @@ void CameraNode::Start()
           getCameraFeature("DSPSubregionRight", configProsilica.DSPSubregionRight);
           getCameraFeature("DSPSubregionBottom", configProsilica.DSPSubregionBottom);
           
-          getCameraFeature("GevSCPSPacketSize", configProsilica.GevSCPSPacketSize_MTU);
-          getCameraFeature("TriggerMode", configProsilica.TriggerMode);
-          
           reconfigureServerProsilica.updateConfig(configProsilica); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerProsilica.setCallback(reconfigureCallbackProsilica);
         }
@@ -1715,8 +1640,6 @@ void CameraNode::Start()
           getCameraFeature("BrightnessAutoGainMin", configIDS.BrightnessAutoGainMin);
           getCameraFeature("BrightnessAutoGainMax", configIDS.BrightnessAutoGainMax);
           getCameraFeature("Gamma", configIDS.Gamma);
-          getCameraFeature("GevSCPSPacketSize", configIDS.GevSCPSPacketSize_MTU);
-          getCameraFeature("TriggerMode", configIDS.TriggerMode);
           
           reconfigureServerIDS.updateConfig(configIDS); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerIDS.setCallback(reconfigureCallbackIDS);
