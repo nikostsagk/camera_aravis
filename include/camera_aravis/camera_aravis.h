@@ -110,7 +110,10 @@ class CameraNode
 
   ArvGvStream *CreateStream(ros::NodeHandle &nh);
 
-  //void RosReconfigure_callback(Config &config, uint32_t level);
+  void RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, uint32_t level);
+  void RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t level);
+  void RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t level);
+  void RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, uint32_t level);
   
   static void stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
   
@@ -137,6 +140,11 @@ class CameraNode
   int setCameraFeature(std::string featureName, int featureVal);
   double setCameraFeature(std::string featureName, double featureVal);
   bool setCameraFeature(std::string featureName, bool featureVal);
+  
+  void getCameraFeature(std::string featureName, std::string& featureVal);
+  void getCameraFeature(std::string featureName, int& featureVal);
+  void getCameraFeature(std::string featureName, double& featureVal);
+  void getCameraFeature(std::string featureName, bool& featureVal);
   
   void setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type);
 

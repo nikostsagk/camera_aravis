@@ -69,6 +69,19 @@ bool CameraNode::setCameraFeature(std::string featureName, bool featureVal){
   }
   return valFromCam;
 }
+void CameraNode::getCameraFeature(std::string featureName, std::string& featureVal){
+  featureVal = arv_device_get_string_feature_value (pDevice, featureName.c_str());
+}
+void CameraNode::getCameraFeature(std::string featureName, int& featureVal){
+  featureVal = arv_device_get_integer_feature_value (pDevice, featureName.c_str());
+}
+void CameraNode::getCameraFeature(std::string featureName, double& featureVal){
+  featureVal = arv_device_get_float_feature_value (pDevice, featureName.c_str());
+}
+void CameraNode::getCameraFeature(std::string featureName, bool& featureVal){
+  gboolean valFromCam = arv_device_get_boolean_feature_value (pDevice, featureName.c_str());
+  featureVal = valFromCam?true:false;
+}
 
 void CameraNode::setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type){
   std::string node_name = ros::this_node::getName();
@@ -177,8 +190,6 @@ ArvGvStream* CameraNode::CreateStream(ros::NodeHandle &nh)
     return pStream;
 } // CreateStream()
 
-
-/*
 void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, uint32_t level)
 {    
     int             changedAcquisitionMode;
@@ -207,7 +218,7 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
     changedAutoGainLowerLimit = (newconfig.AutoGainLowerLimit != configPointgrey.AutoGainLowerLimit);
     changedAutoGainUpperLimit = (newconfig.AutoGainUpperLimit != configPointgrey.AutoGainUpperLimit);
     
-    changedMtu          		= (newconfig.GevSCPSPacketSize != configPointgrey.GevSCPSPacketSize);
+    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configPointgrey.GevSCPSPacketSize_MTU);
 
     // Adjust other controls dependent on what the user changed.
     if (changedExposureTime || changedGain){
@@ -221,6 +232,7 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
     if (changedAcquisitionMode)
     {
       newconfig.AcquisitionMode = setCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+      ros::Duration(1.0).sleep();
     }
     
     if (changedAcquisitionFrameRate)
@@ -228,211 +240,701 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
       newconfig.AcquisitionFrameRate = setCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
     }
     
-    if (changedGain)
+    if (changedExposureTime)
     {
-        if (isImplementedGain)
-        {
-            ROS_INFO_NAMED (NAME, "Set gain = %f", newconfig.Gain);
-            //arv_device_set_integer_feature_value (pDevice, "GainRaw", newconfig.GainRaw);
-            arv_camera_set_gain (pCamera, newconfig.Gain);
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support Gain or GainRaw.");
+      newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
+      ros::Duration(1.0).sleep();
     }
-
+    
     if (changedExposureAuto)
     {
-        if (isImplementedExposureAuto && isImplementedExposureTimeAbs)
-        {
-            ROS_INFO_NAMED (NAME, "Set ExposureAuto = %s", newconfig.ExposureAuto.c_str());
-            arv_device_set_string_feature_value (pDevice, "ExposureAuto", newconfig.ExposureAuto.c_str());
-            if (newconfig.ExposureAuto=="Once")
-            {
-                ros::Duration(2.0).sleep();
-                newconfig.ExposureTimeAbs = arv_device_get_float_feature_value (pDevice, keyExposureTime);
-                ROS_INFO_NAMED (NAME, "Get ExposureTimeAbs = %f", newconfig.ExposureTimeAbs);
-                newconfig.ExposureAuto = "Off";
-            }
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support ExposureAuto.");
+      newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.ExposureAuto=="Once")
+      {
+          newconfig.ExposureAuto = "Off";
+          newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+          ros::Duration(1.0).sleep();
+      }
     }
+    
+    if (changedAutoExposureTimeLowerLimit)
+    {
+      newconfig.AutoExposureTimeLowerLimit = setCameraFeature("AutoExposureTimeLowerLimit", newconfig.AutoExposureTimeLowerLimit);
+    }
+    
+    if (changedAutoExposureTimeUpperLimit)
+    {
+      newconfig.AutoExposureTimeUpperLimit = setCameraFeature("AutoExposureTimeUpperLimit", newconfig.AutoExposureTimeUpperLimit);
+    }
+    
+    if (changedGain)
+    {
+      newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
+      ros::Duration(1.0).sleep();
+    }
+    
     if (changedGainAuto)
     {
-        if (isImplementedGainAuto && isImplementedGain)
-        {
-            ROS_INFO_NAMED (NAME, "Set GainAuto = %s", newconfig.GainAuto.c_str());
-            arv_device_set_string_feature_value (pDevice, "GainAuto", newconfig.GainAuto.c_str());
-            if (newconfig.GainAuto=="Once")
-            {
-                ros::Duration(2.0).sleep();
-                //newconfig.GainRaw = arv_device_get_integer_feature_value (pDevice, "GainRaw");
-                newconfig.Gain = arv_camera_get_gain (pCamera);
-                ROS_INFO_NAMED (NAME, "Get Gain = %f", newconfig.Gain);
-                newconfig.GainAuto = "Off";
-            }
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support GainAuto.");
+      newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.GainAuto=="Once")
+      {
+          newconfig.GainAuto = "Off";
+          newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+          ros::Duration(1.0).sleep();
+      }
     }
-
-    if (changedAcquisitionFrameRate)
+    
+    if (changedAutoGainLowerLimit)
     {
-        if (isImplementedAcquisitionFrameRate)
-        {
-            ROS_INFO_NAMED (NAME, "Set %s = %f", keyAcquisitionFrameRate, newconfig.AcquisitionFrameRate);
-            arv_device_set_float_feature_value (pDevice, keyAcquisitionFrameRate, newconfig.AcquisitionFrameRate);
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support AcquisitionFrameRate.");
+      newconfig.AutoGainLowerLimit = setCameraFeature("AutoGainLowerLimit", newconfig.AutoGainLowerLimit);
     }
-
-    if (changedTriggerMode)
+    
+    if (changedAutoGainUpperLimit)
     {
-        if (isImplementedTriggerMode)
-        {
-            ROS_INFO_NAMED (NAME, "Set TriggerMode = %s", newconfig.TriggerMode.c_str());
-            arv_device_set_string_feature_value (pDevice, "TriggerMode", newconfig.TriggerMode.c_str());
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support TriggerMode.");
+      newconfig.AutoGainUpperLimit = setCameraFeature("AutoGainUpperLimit", newconfig.AutoGainUpperLimit);
     }
-
-    if (changedTriggerSource)
-    {
-        if (isImplementedTriggerSource)
-        {
-            ROS_INFO_NAMED (NAME, "Set TriggerSource = %s", newconfig.TriggerSource.c_str());
-            arv_device_set_string_feature_value (pDevice, "TriggerSource", newconfig.TriggerSource.c_str());
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support TriggerSource.");
-    }
-
-    if ((changedTriggerMode || changedTriggerSource || changedSoftwarerate) && newconfig.TriggerMode=="On" && newconfig.TriggerSource=="Software")
-    {
-        if (isImplementedAcquisitionFrameRate)
-        {
-            // The software rate is limited by the camera's internal framerate.  Bump up the camera's internal framerate if necessary.
-            newconfig.AcquisitionFrameRate = configMax.AcquisitionFrameRate;
-            ROS_INFO_NAMED (NAME, "Set %s = %f", keyAcquisitionFrameRate, newconfig.AcquisitionFrameRate);
-            arv_device_set_float_feature_value (pDevice, keyAcquisitionFrameRate, newconfig.AcquisitionFrameRate);
-        }
-    }
-
-    if (changedTriggerSource || changedSoftwarerate)
-    {
-        // Recreate the software trigger callback.
-        if (idSoftwareTriggerTimer)
-        {
-            g_source_remove(idSoftwareTriggerTimer);
-            idSoftwareTriggerTimer = 0;
-        }
-        if (!strcmp(newconfig.TriggerSource.c_str(),"Software"))
-        {
-            ROS_INFO_NAMED (NAME, "Set softwaretriggerrate = %f", 1000.0/ceil(1000.0 / newconfig.softwaretriggerrate));
-
-            // Turn on software timer callback.
-            idSoftwareTriggerTimer = g_timeout_add ((guint)ceil(1000.0 / newconfig.softwaretriggerrate), SoftwareTrigger_callback, pDevice);
-        }
-    }
-    if (changedFocusPos)
-    {
-        if (isImplementedFocusPos)
-        {
-            ROS_INFO_NAMED (NAME, "Set FocusPos = %d", newconfig.FocusPos);
-            arv_device_set_integer_feature_value(pDevice, "FocusPos", newconfig.FocusPos);
-            ros::Duration(1.0).sleep();
-            newconfig.FocusPos = arv_device_get_integer_feature_value(pDevice, "FocusPos");
-            ROS_INFO_NAMED (NAME, "Get FocusPos = %d", newconfig.FocusPos);
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support FocusPos.");
-    }
+    
     if (changedMtu)
     {
-        if (isImplementedMtu)
-        {
-            ROS_INFO_NAMED (NAME, "Set mtu = %d", newconfig.mtu);
-            arv_device_set_integer_feature_value(pDevice, "GevSCPSPacketSize", newconfig.mtu);
-            ros::Duration(1.0).sleep();
-            newconfig.mtu = arv_device_get_integer_feature_value(pDevice, "GevSCPSPacketSize");
-            ROS_INFO_NAMED (NAME, "Get mtu = %d", newconfig.mtu);
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support mtu (i.e. GevSCPSPacketSize).");
+      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+      ros::Duration(1.0).sleep();
     }
+    
+    /*if (changedTriggerMode)
+    {
+      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
+    }*/
 
+    getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+    getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
+    getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+    getCameraFeature("ExposureTime", newconfig.ExposureTime);
+    getCameraFeature("AutoExposureTimeLowerLimit", newconfig.AutoExposureTimeLowerLimit);
+    getCameraFeature("AutoExposureTimeUpperLimit", newconfig.AutoExposureTimeUpperLimit);
+    getCameraFeature("GainAuto", newconfig.GainAuto);
+    getCameraFeature("Gain", newconfig.Gain);
+    getCameraFeature("AutoGainLowerLimit", newconfig.AutoGainLowerLimit);
+    getCameraFeature("AutoGainUpperLimit", newconfig.AutoGainUpperLimit);
+    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+    getCameraFeature("TriggerMode", newconfig.TriggerMode);
+    
+    configPointgrey = newconfig;
+} // RosReconfigure_callback_pointgrey()
+
+
+void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t level)
+{    
+    int             changedAcquisitionMode;
+    int             changedAcquisitionFrameRate;
+    int             changedExposureTime;
+    int             changedExposureAuto;
+    int             changedBrightnessAutoExposureTimeLimitMode;
+    int             changedBrightnessAutoExposureTimeMin;
+    int             changedBrightnessAutoExposureTimeMax;
+    int             changedGain;
+    int             changedGainAuto;
+    int             changedBrightnessAutoGainLimitMode;
+    int             changedBrightnessAutoGainMin;
+    int             changedBrightnessAutoGainMax;
+    int             changedGamma;
+    int             changedMtu;
+
+    // Find what the user changed.
+    changedAcquisitionMode    			= (newconfig.AcquisitionMode != configIDS.AcquisitionMode);
+    changedAcquisitionFrameRate         = (newconfig.AcquisitionFrameRate != configIDS.AcquisitionFrameRate);
+    
+    changedExposureTime = (newconfig.ExposureTime != configIDS.ExposureTime);
+    changedExposureAuto 		= (newconfig.ExposureAuto != configIDS.ExposureAuto);
+    changedBrightnessAutoExposureTimeLimitMode = (newconfig.BrightnessAutoExposureTimeLimitMode != configIDS.BrightnessAutoExposureTimeLimitMode);
+    changedBrightnessAutoExposureTimeMin = (newconfig.BrightnessAutoExposureTimeMin != configIDS.BrightnessAutoExposureTimeMin);
+    changedBrightnessAutoExposureTimeMax = (newconfig.BrightnessAutoExposureTimeMax != configIDS.BrightnessAutoExposureTimeMax);
+    
+    changedGain         		= (newconfig.Gain != configIDS.Gain);
+    changedGainAuto     		= (newconfig.GainAuto != configIDS.GainAuto);
+    changedBrightnessAutoGainLimitMode = (newconfig.BrightnessAutoGainLimitMode != configIDS.BrightnessAutoGainLimitMode);
+    changedBrightnessAutoGainMin = (newconfig.BrightnessAutoGainMin != configIDS.BrightnessAutoGainMin);
+    changedBrightnessAutoGainMax = (newconfig.BrightnessAutoGainMax != configIDS.BrightnessAutoGainMax);
+    
+    changedGamma            = (newconfig.Gamma != configIDS.Gamma);
+    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configIDS.GevSCPSPacketSize_MTU);
+
+    // Adjust other controls dependent on what the user changed.
+    if (changedExposureTime || changedGain){
+      newconfig.ExposureAuto = "Off";
+      newconfig.GainAuto = "Off";
+    }
+    changedExposureAuto 		= (newconfig.ExposureAuto != configIDS.ExposureAuto);
+    changedGainAuto     		= (newconfig.GainAuto != configIDS.GainAuto);
+    
+    // Set params into the camera.
     if (changedAcquisitionMode)
     {
-        if (isImplementedAcquisitionMode)
-        {
-            ROS_INFO_NAMED (NAME, "Set AcquisitionMode = %s", newconfig.AcquisitionMode.c_str());
-            arv_device_set_string_feature_value (pDevice, "AcquisitionMode", newconfig.AcquisitionMode.c_str());
-
-            ROS_INFO_NAMED (NAME, "AcquisitionStop");
-            arv_device_execute_command (pDevice, "AcquisitionStop");
-            ROS_INFO_NAMED (NAME, "AcquisitionStart");
-            arv_device_execute_command (pDevice, "AcquisitionStart");
-        }
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support AcquisitionMode.");
+      newconfig.AcquisitionMode = setCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+      ros::Duration(1.0).sleep();
     }
-
-    if (changedAcquire)
+    
+    if (changedAcquisitionFrameRate)
     {
-        if (newconfig.Acquire)
-        {
-            ROS_INFO_NAMED (NAME, "AcquisitionStart");
-            arv_device_execute_command (pDevice, "AcquisitionStart");
-        }
-        else
-        {
-            ROS_INFO_NAMED (NAME, "AcquisitionStop");
-            arv_device_execute_command (pDevice, "AcquisitionStop");
-        }
+      newconfig.AcquisitionFrameRate = setCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
     }
-
-    if (changedBinning)
+    
+    if (changedExposureTime)
     {
-        if(isImplementedBinning)
-	{
-	    if(newconfig.Binning == "Full")
-	    {
-	        if (dxMin <= 1 && dxMax >= 1 && dyMin <= 1 && dyMax >= 1)
-		{
-		    arv_camera_set_binning(pCamera, 1, 1);
-		    ROS_INFO_NAMED (NAME, "Set Full Binning");
-		}
-		else
-		{
-		    ROS_ERROR_NAMED (NAME, "Full Binning is not supported, this is weird");
-		}
-	    }
-	    else if (newconfig.Binning == "Half")
-	    {
-	        if (dxMin <= 2 && dxMax >= 2 && dyMin <= 2 && dyMax >= 2)
-		{
-		    arv_camera_set_binning(pCamera, 2, 2);
-		    ROS_INFO_NAMED (NAME, "Set Half Binning");
-		}
-		else
-		{
-		    ROS_ERROR_NAMED (NAME, "Half Binning is not supported");
-		}
-	    }
-	    else
-	    {
-		ROS_ERROR_NAMED (NAME, "Binning configuration %s is not implemented", newconfig.Binning.c_str());
-	    }
-	}
-        else
-            ROS_INFO_NAMED (NAME, "Camera does not support Binning.");
+      newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedExposureAuto)
+    {
+      newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.ExposureAuto=="Once")
+      {
+          newconfig.ExposureAuto = "Off";
+          newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+          ros::Duration(1.0).sleep();
+      }
+    }
+    if(changedBrightnessAutoExposureTimeLimitMode){
+      newconfig.BrightnessAutoExposureTimeLimitMode = setCameraFeature("BrightnessAutoExposureTimeLimitMode", newconfig.BrightnessAutoExposureTimeLimitMode);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedBrightnessAutoExposureTimeMin)
+    {
+      newconfig.BrightnessAutoExposureTimeMin = setCameraFeature("BrightnessAutoExposureTimeMin", newconfig.BrightnessAutoExposureTimeMin);
+    }
+    
+    if (changedBrightnessAutoExposureTimeMax)
+    {
+      newconfig.BrightnessAutoExposureTimeMax = setCameraFeature("BrightnessAutoExposureTimeMax", newconfig.BrightnessAutoExposureTimeMax);
+    }
+    
+    if (changedGain)
+    {
+      newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedGainAuto)
+    {
+      newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.GainAuto=="Once")
+      {
+          newconfig.GainAuto = "Off";
+          newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+          ros::Duration(1.0).sleep();
+      }
+    }
+    if(changedBrightnessAutoGainLimitMode){
+      newconfig.BrightnessAutoGainLimitMode = setCameraFeature("BrightnessAutoGainLimitMode", newconfig.BrightnessAutoGainLimitMode);
+      ros::Duration(1.0).sleep();
     }
 
-    config = newconfig;
+    if (changedBrightnessAutoGainMin)
+    {
+      newconfig.BrightnessAutoGainMin = setCameraFeature("BrightnessAutoGainMin", newconfig.BrightnessAutoGainMin);
+    }
+    
+    if (changedBrightnessAutoGainMax)
+    {
+      newconfig.BrightnessAutoGainMax = setCameraFeature("BrightnessAutoGainMax", newconfig.BrightnessAutoGainMax);
+    }
+    
+    if(changedGamma)
+    {
+      newconfig.Gamma = setCameraFeature("Gamma", newconfig.Gamma);
+    }
+    
+    if (changedMtu)
+    {
+      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+      ros::Duration(1.0).sleep();
+    }
+    
+    /*if (changedTriggerMode)
+    {
+      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
+    }*/
 
-} // RosReconfigure_callback()*/
+    getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+    getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
+    getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+    getCameraFeature("ExposureTime", newconfig.ExposureTime);
+    getCameraFeature("BrightnessAutoExposureTimeLimitMode", newconfig.BrightnessAutoExposureTimeLimitMode);
+    getCameraFeature("BrightnessAutoExposureTimeMin", newconfig.BrightnessAutoExposureTimeMin);
+    getCameraFeature("BrightnessAutoExposureTimeMax", newconfig.BrightnessAutoExposureTimeMax);
+    getCameraFeature("GainAuto", newconfig.GainAuto);
+    getCameraFeature("Gain", newconfig.Gain);
+    getCameraFeature("BrightnessAutoGainLimitMode", newconfig.BrightnessAutoGainLimitMode);
+    getCameraFeature("BrightnessAutoGainMin", newconfig.BrightnessAutoGainMin);
+    getCameraFeature("BrightnessAutoGainMax", newconfig.BrightnessAutoGainMax);
+    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+    getCameraFeature("TriggerMode", newconfig.TriggerMode);
+    
+    configIDS = newconfig;
+
+} // RosReconfigure_callback_IDS()*/
+
+void CameraNode::RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t level)
+{    
+    int             changedAcquisitionMode;
+    int             changedAcquisitionFrameRateAbs;
+    int             changedExposureTimeAbs;
+    int             changedExposureAuto;
+    int             changedExposureAutoAlg;
+    int             changedExposureAutoAdjustTol;
+    int             changedExposureAutoOutliers;
+    int             changedExposureAutoTarget;
+    int             changedExposureAutoMin;
+    int             changedExposureAutoMax;
+
+    int             changedGain;
+    int             changedGainAuto;
+    int             changedGainAutoAdjustTol;
+    int             changedGainAutoOutliers;
+    int             changedGainAutoTarget;
+    int             changedGainAutoMin;
+    int             changedGainAutoMax;
+
+    int             changedDSPSubregionLeft;
+    int             changedDSPSubregionTop;
+    int             changedDSPSubregionRight;
+    int             changedDSPSubregionBottom;
+    
+    int             changedMtu;
+
+    // Find what the user changed.
+    changedAcquisitionMode    			= (newconfig.AcquisitionMode != configMako.AcquisitionMode);
+    changedAcquisitionFrameRateAbs         = (newconfig.AcquisitionFrameRateAbs != configMako.AcquisitionFrameRateAbs);
+    
+    changedExposureTimeAbs = (newconfig.ExposureTimeAbs != configMako.ExposureTimeAbs);
+    changedExposureAuto 		= (newconfig.ExposureAuto != configMako.ExposureAuto);
+    changedExposureAutoAlg 		= (newconfig.ExposureAutoAlg != configMako.ExposureAutoAlg);
+    changedExposureAutoAdjustTol 		= (newconfig.ExposureAutoAdjustTol != configMako.ExposureAutoAdjustTol);
+    changedExposureAutoOutliers 		= (newconfig.ExposureAutoOutliers != configMako.ExposureAutoOutliers);
+    changedExposureAutoTarget 		= (newconfig.ExposureAutoTarget != configMako.ExposureAutoTarget);
+    changedExposureAutoMin = (newconfig.ExposureAutoMin != configMako.ExposureAutoMin);
+    changedExposureAutoMax = (newconfig.ExposureAutoMax != configMako.ExposureAutoMax);
+    
+    changedGain         		= (newconfig.Gain != configMako.Gain);
+    changedGainAuto     		= (newconfig.GainAuto != configMako.GainAuto);
+    changedGainAutoAdjustTol = (newconfig.GainAutoAdjustTol != configMako.GainAutoAdjustTol);
+    changedGainAutoOutliers = (newconfig.GainAutoOutliers != configMako.GainAutoOutliers);
+    changedGainAutoTarget = (newconfig.GainAutoTarget != configMako.GainAutoTarget);
+    changedGainAutoMin = (newconfig.GainAutoMin != configMako.GainAutoMin);
+    changedGainAutoMax = (newconfig.GainAutoMax != configMako.GainAutoMax);
+    
+    changedDSPSubregionLeft = (newconfig.DSPSubregionLeft != configMako.DSPSubregionLeft);
+    changedDSPSubregionTop = (newconfig.DSPSubregionTop != configMako.DSPSubregionTop);
+    changedDSPSubregionRight = (newconfig.DSPSubregionRight != configMako.DSPSubregionRight);
+    changedDSPSubregionBottom = (newconfig.DSPSubregionBottom != configMako.DSPSubregionBottom);
+    
+    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configMako.GevSCPSPacketSize_MTU);
+
+    // Adjust other controls dependent on what the user changed.
+    if (changedExposureTimeAbs || changedGain){
+      newconfig.ExposureAuto = "Off";
+      newconfig.GainAuto = "Off";
+    }
+    changedExposureAuto 		= (newconfig.ExposureAuto != configMako.ExposureAuto);
+    changedGainAuto     		= (newconfig.GainAuto != configMako.GainAuto);
+    
+    // Set params into the camera.
+    if (changedAcquisitionMode)
+    {
+      newconfig.AcquisitionMode = setCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedAcquisitionFrameRateAbs)
+    {
+      newconfig.AcquisitionFrameRateAbs = setCameraFeature("AcquisitionFrameRateAbs", newconfig.AcquisitionFrameRateAbs);
+    }
+    
+    if (changedExposureTimeAbs)
+    {
+      newconfig.ExposureTimeAbs = setCameraFeature("ExposureTimeAbs", newconfig.ExposureTimeAbs);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedExposureAuto)
+    {
+      newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.ExposureAuto=="Once")
+      {
+          newconfig.ExposureAuto = "Off";
+          newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+          ros::Duration(1.0).sleep();
+      }
+    }
+    
+    if (changedExposureAutoAlg)
+    {
+      newconfig.ExposureAutoAlg = setCameraFeature("ExposureAutoAlg", newconfig.ExposureAutoAlg);
+    }
+    
+    if (changedExposureAutoAdjustTol)
+    {
+      newconfig.ExposureAutoAdjustTol = setCameraFeature("ExposureAutoAdjustTol", newconfig.ExposureAutoAdjustTol);
+    }
+    
+    if (changedExposureAutoOutliers)
+    {
+      newconfig.ExposureAutoOutliers = setCameraFeature("ExposureAutoOutliers", newconfig.ExposureAutoOutliers);
+    }
+    
+    if (changedExposureAutoTarget)
+    {
+      newconfig.ExposureAutoTarget = setCameraFeature("ExposureAutoTarget", newconfig.ExposureAutoTarget);
+    }
+    
+    if (changedExposureAutoMin)
+    {
+      newconfig.ExposureAutoMin = setCameraFeature("ExposureAutoMin", newconfig.ExposureAutoMin);
+    }
+    
+    if (changedExposureAutoMax)
+    {
+      newconfig.ExposureAutoMax = setCameraFeature("ExposureAutoMax", newconfig.ExposureAutoMax);
+    }
+    
+    if (changedGain)
+    {
+      newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedGainAuto)
+    {
+      newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.GainAuto=="Once")
+      {
+          newconfig.GainAuto = "Off";
+          newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+          ros::Duration(1.0).sleep();
+      }
+    }
+    
+    if (changedGainAutoAdjustTol)
+    {
+      newconfig.GainAutoAdjustTol = setCameraFeature("GainAutoAdjustTol", newconfig.GainAutoAdjustTol);
+    }
+    
+    if (changedGainAutoOutliers)
+    {
+      newconfig.GainAutoOutliers = setCameraFeature("GainAutoOutliers", newconfig.GainAutoOutliers);
+    }
+    
+    if (changedGainAutoTarget)
+    {
+      newconfig.GainAutoTarget = setCameraFeature("GainAutoTarget", newconfig.GainAutoTarget);
+    }
+    
+    if (changedGainAutoMin)
+    {
+      newconfig.GainAutoMin = setCameraFeature("GainAutoMin", newconfig.GainAutoMin);
+    }
+    
+    if (changedGainAutoMax)
+    {
+      newconfig.GainAutoMax = setCameraFeature("GainAutoMax", newconfig.GainAutoMax);
+    }
+    
+    if (changedDSPSubregionLeft)
+    {
+      newconfig.DSPSubregionLeft = setCameraFeature("DSPSubregionLeft", newconfig.DSPSubregionLeft);
+    }
+    
+    if (changedDSPSubregionTop)
+    {
+      newconfig.DSPSubregionTop = setCameraFeature("DSPSubregionTop", newconfig.DSPSubregionTop);
+    }
+    
+    if (changedDSPSubregionRight)
+    {
+      newconfig.DSPSubregionRight = setCameraFeature("DSPSubregionRight", newconfig.DSPSubregionRight);
+    }
+    
+    if (changedDSPSubregionBottom)
+    {
+      newconfig.DSPSubregionBottom = setCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
+    }
+    
+    if (changedMtu)
+    {
+      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+      ros::Duration(1.0).sleep();
+    }
+    
+    /*if (changedTriggerMode)
+    {
+      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
+    }*/
+
+    getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+    getCameraFeature("AcquisitionFrameRateAbs", newconfig.AcquisitionFrameRateAbs);
+    getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+    getCameraFeature("ExposureTimeAbs", newconfig.ExposureTimeAbs);
+    getCameraFeature("ExposureAutoAlg", newconfig.ExposureAutoAlg);
+    getCameraFeature("ExposureAutoAdjustTol", newconfig.ExposureAutoAdjustTol);
+    getCameraFeature("ExposureAutoOutliers", newconfig.ExposureAutoOutliers);
+    getCameraFeature("ExposureAutoTarget", newconfig.ExposureAutoTarget);
+    getCameraFeature("ExposureAutoMin", newconfig.ExposureAutoMin);
+    getCameraFeature("ExposureAutoMax", newconfig.ExposureAutoMax);
+    
+    getCameraFeature("GainAuto", newconfig.GainAuto);
+    getCameraFeature("Gain", newconfig.Gain);
+    getCameraFeature("GainAutoAdjustTol", newconfig.GainAutoAdjustTol);
+    getCameraFeature("GainAutoOutliers", newconfig.GainAutoOutliers);
+    getCameraFeature("GainAutoTarget", newconfig.GainAutoTarget);
+    getCameraFeature("GainAutoMin", newconfig.GainAutoMin);
+    getCameraFeature("GainAutoMax", newconfig.GainAutoMax);
+    
+    getCameraFeature("DSPSubregionLeft", newconfig.DSPSubregionLeft);
+    getCameraFeature("DSPSubregionTop", newconfig.DSPSubregionTop);
+    getCameraFeature("DSPSubregionRight", newconfig.DSPSubregionRight);
+    getCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
+
+    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+    getCameraFeature("TriggerMode", newconfig.TriggerMode);
+    
+    configMako = newconfig;
+} // RosReconfigure_callback_mako()
+
+
+void CameraNode::RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, uint32_t level)
+{    
+    int             changedAcquisitionMode;
+    int             changedAcquisitionFrameRateAbs;
+    int             changedExposureTimeAbs;
+    int             changedExposureAuto;
+    int             changedExposureAutoAlg;
+    int             changedExposureAutoAdjustTol;
+    int             changedExposureAutoOutliers;
+    int             changedExposureAutoTarget;
+    int             changedExposureAutoMin;
+    int             changedExposureAutoMax;
+
+    int             changedGain;
+    int             changedGainAuto;
+    int             changedGainAutoAdjustTol;
+    int             changedGainAutoOutliers;
+    int             changedGainAutoTarget;
+    int             changedGainAutoMin;
+    int             changedGainAutoMax;
+
+    int             changedDSPSubregionLeft;
+    int             changedDSPSubregionTop;
+    int             changedDSPSubregionRight;
+    int             changedDSPSubregionBottom;
+    
+    int             changedMtu;
+
+    // Find what the user changed.
+    changedAcquisitionMode    			= (newconfig.AcquisitionMode != configProsilica.AcquisitionMode);
+    changedAcquisitionFrameRateAbs         = (newconfig.AcquisitionFrameRateAbs != configProsilica.AcquisitionFrameRateAbs);
+    
+    changedExposureTimeAbs = (newconfig.ExposureTimeAbs != configProsilica.ExposureTimeAbs);
+    changedExposureAuto 		= (newconfig.ExposureAuto != configProsilica.ExposureAuto);
+    changedExposureAutoAlg 		= (newconfig.ExposureAutoAlg != configProsilica.ExposureAutoAlg);
+    changedExposureAutoAdjustTol 		= (newconfig.ExposureAutoAdjustTol != configProsilica.ExposureAutoAdjustTol);
+    changedExposureAutoOutliers 		= (newconfig.ExposureAutoOutliers != configProsilica.ExposureAutoOutliers);
+    changedExposureAutoTarget 		= (newconfig.ExposureAutoTarget != configProsilica.ExposureAutoTarget);
+    changedExposureAutoMin = (newconfig.ExposureAutoMin != configProsilica.ExposureAutoMin);
+    changedExposureAutoMax = (newconfig.ExposureAutoMax != configProsilica.ExposureAutoMax);
+    
+    changedGain         		= (newconfig.Gain != configProsilica.Gain);
+    changedGainAuto     		= (newconfig.GainAuto != configProsilica.GainAuto);
+    changedGainAutoAdjustTol = (newconfig.GainAutoAdjustTol != configProsilica.GainAutoAdjustTol);
+    changedGainAutoOutliers = (newconfig.GainAutoOutliers != configProsilica.GainAutoOutliers);
+    changedGainAutoTarget = (newconfig.GainAutoTarget != configProsilica.GainAutoTarget);
+    changedGainAutoMin = (newconfig.GainAutoMin != configProsilica.GainAutoMin);
+    changedGainAutoMax = (newconfig.GainAutoMax != configProsilica.GainAutoMax);
+    
+    changedDSPSubregionLeft = (newconfig.DSPSubregionLeft != configProsilica.DSPSubregionLeft);
+    changedDSPSubregionTop = (newconfig.DSPSubregionTop != configProsilica.DSPSubregionTop);
+    changedDSPSubregionRight = (newconfig.DSPSubregionRight != configProsilica.DSPSubregionRight);
+    changedDSPSubregionBottom = (newconfig.DSPSubregionBottom != configProsilica.DSPSubregionBottom);
+    
+    changedMtu          		= (newconfig.GevSCPSPacketSize_MTU != configProsilica.GevSCPSPacketSize_MTU);
+
+    // Adjust other controls dependent on what the user changed.
+    if (changedExposureTimeAbs || changedGain){
+      newconfig.ExposureAuto = "Off";
+      newconfig.GainAuto = "Off";
+    }
+    changedExposureAuto 		= (newconfig.ExposureAuto != configProsilica.ExposureAuto);
+    changedGainAuto     		= (newconfig.GainAuto != configProsilica.GainAuto);
+    
+    // Set params into the camera.
+    if (changedAcquisitionMode)
+    {
+      newconfig.AcquisitionMode = setCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedAcquisitionFrameRateAbs)
+    {
+      newconfig.AcquisitionFrameRateAbs = setCameraFeature("AcquisitionFrameRateAbs", newconfig.AcquisitionFrameRateAbs);
+    }
+    
+    if (changedExposureTimeAbs)
+    {
+      newconfig.ExposureTimeAbs = setCameraFeature("ExposureTimeAbs", newconfig.ExposureTimeAbs);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedExposureAuto)
+    {
+      newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.ExposureAuto=="Once")
+      {
+          newconfig.ExposureAuto = "Off";
+          newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+          ros::Duration(1.0).sleep();
+      }
+    }
+    
+    if (changedExposureAutoAlg)
+    {
+      newconfig.ExposureAutoAlg = setCameraFeature("ExposureAutoAlg", newconfig.ExposureAutoAlg);
+    }
+    
+    if (changedExposureAutoAdjustTol)
+    {
+      newconfig.ExposureAutoAdjustTol = setCameraFeature("ExposureAutoAdjustTol", newconfig.ExposureAutoAdjustTol);
+    }
+    
+    if (changedExposureAutoOutliers)
+    {
+      newconfig.ExposureAutoOutliers = setCameraFeature("ExposureAutoOutliers", newconfig.ExposureAutoOutliers);
+    }
+    
+    if (changedExposureAutoTarget)
+    {
+      newconfig.ExposureAutoTarget = setCameraFeature("ExposureAutoTarget", newconfig.ExposureAutoTarget);
+    }
+    
+    if (changedExposureAutoMin)
+    {
+      newconfig.ExposureAutoMin = setCameraFeature("ExposureAutoMin", newconfig.ExposureAutoMin);
+    }
+    
+    if (changedExposureAutoMax)
+    {
+      newconfig.ExposureAutoMax = setCameraFeature("ExposureAutoMax", newconfig.ExposureAutoMax);
+    }
+    
+    if (changedGain)
+    {
+      newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
+      ros::Duration(1.0).sleep();
+    }
+    
+    if (changedGainAuto)
+    {
+      newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.GainAuto=="Once")
+      {
+          newconfig.GainAuto = "Off";
+          newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
+          ros::Duration(1.0).sleep();
+      }
+    }
+    
+    if (changedGainAutoAdjustTol)
+    {
+      newconfig.GainAutoAdjustTol = setCameraFeature("GainAutoAdjustTol", newconfig.GainAutoAdjustTol);
+    }
+    
+    if (changedGainAutoOutliers)
+    {
+      newconfig.GainAutoOutliers = setCameraFeature("GainAutoOutliers", newconfig.GainAutoOutliers);
+    }
+    
+    if (changedGainAutoTarget)
+    {
+      newconfig.GainAutoTarget = setCameraFeature("GainAutoTarget", newconfig.GainAutoTarget);
+    }
+    
+    if (changedGainAutoMin)
+    {
+      newconfig.GainAutoMin = setCameraFeature("GainAutoMin", newconfig.GainAutoMin);
+    }
+    
+    if (changedGainAutoMax)
+    {
+      newconfig.GainAutoMax = setCameraFeature("GainAutoMax", newconfig.GainAutoMax);
+    }
+    
+    if (changedDSPSubregionLeft)
+    {
+      newconfig.DSPSubregionLeft = setCameraFeature("DSPSubregionLeft", newconfig.DSPSubregionLeft);
+    }
+    
+    if (changedDSPSubregionTop)
+    {
+      newconfig.DSPSubregionTop = setCameraFeature("DSPSubregionTop", newconfig.DSPSubregionTop);
+    }
+    
+    if (changedDSPSubregionRight)
+    {
+      newconfig.DSPSubregionRight = setCameraFeature("DSPSubregionRight", newconfig.DSPSubregionRight);
+    }
+    
+    if (changedDSPSubregionBottom)
+    {
+      newconfig.DSPSubregionBottom = setCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
+    }
+    
+    if (changedMtu)
+    {
+      newconfig.GevSCPSPacketSize_MTU = setCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+      ros::Duration(1.0).sleep();
+    }
+    
+    /*if (changedTriggerMode)
+    {
+      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
+    }*/
+
+    getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+    getCameraFeature("AcquisitionFrameRateAbs", newconfig.AcquisitionFrameRateAbs);
+    getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+    getCameraFeature("ExposureTimeAbs", newconfig.ExposureTimeAbs);
+    getCameraFeature("ExposureAutoAlg", newconfig.ExposureAutoAlg);
+    getCameraFeature("ExposureAutoAdjustTol", newconfig.ExposureAutoAdjustTol);
+    getCameraFeature("ExposureAutoOutliers", newconfig.ExposureAutoOutliers);
+    getCameraFeature("ExposureAutoTarget", newconfig.ExposureAutoTarget);
+    getCameraFeature("ExposureAutoMin", newconfig.ExposureAutoMin);
+    getCameraFeature("ExposureAutoMax", newconfig.ExposureAutoMax);
+    
+    getCameraFeature("GainAuto", newconfig.GainAuto);
+    getCameraFeature("Gain", newconfig.Gain);
+    getCameraFeature("GainAutoAdjustTol", newconfig.GainAutoAdjustTol);
+    getCameraFeature("GainAutoOutliers", newconfig.GainAutoOutliers);
+    getCameraFeature("GainAutoTarget", newconfig.GainAutoTarget);
+    getCameraFeature("GainAutoMin", newconfig.GainAutoMin);
+    getCameraFeature("GainAutoMax", newconfig.GainAutoMax);
+    
+    getCameraFeature("DSPSubregionLeft", newconfig.DSPSubregionLeft);
+    getCameraFeature("DSPSubregionTop", newconfig.DSPSubregionTop);
+    getCameraFeature("DSPSubregionRight", newconfig.DSPSubregionRight);
+    getCameraFeature("DSPSubregionBottom", newconfig.DSPSubregionBottom);
+
+    getCameraFeature("GevSCPSPacketSize", newconfig.GevSCPSPacketSize_MTU);
+    getCameraFeature("TriggerMode", newconfig.TriggerMode);
+    
+    configProsilica = newconfig;
+} // RosReconfigure_callback_prosilica()
 
 void CameraNode::stream_priority_callback (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
 {
@@ -993,13 +1495,26 @@ void CameraNode::Start()
           
           // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
           //boost::recursive_mutex config_mutex;
-          /*dynamic_reconfigure::Server<PointgreyConfig>          reconfigureServerPointgrey;
+          dynamic_reconfigure::Server<PointgreyConfig>          reconfigureServerPointgrey;
           dynamic_reconfigure::Server<PointgreyConfig>::CallbackType      reconfigureCallbackPointgrey;
-  	      reconfigureCallbackPointgrey = boost::bind(&CameraNode::RosReconfigure_callback, this,  _1, _2);
+  	      reconfigureCallbackPointgrey = boost::bind(&CameraNode::RosReconfigure_callback_pointgrey, this,  _1, _2);
           ros::Duration(1.0).sleep();
-  
+          
+          getCameraFeature("AcquisitionMode", configPointgrey.AcquisitionMode);
+          getCameraFeature("AcquisitionFrameRate", configPointgrey.AcquisitionFrameRate);
+          getCameraFeature("ExposureAuto", configPointgrey.ExposureAuto);
+          getCameraFeature("ExposureTime", configPointgrey.ExposureTime);
+          getCameraFeature("AutoExposureTimeLowerLimit", configPointgrey.AutoExposureTimeLowerLimit);
+          getCameraFeature("AutoExposureTimeUpperLimit", configPointgrey.AutoExposureTimeUpperLimit);
+          getCameraFeature("GainAuto", configPointgrey.GainAuto);
+          getCameraFeature("Gain", configPointgrey.Gain);
+          getCameraFeature("AutoGainLowerLimit", configPointgrey.AutoGainLowerLimit);
+          getCameraFeature("AutoGainUpperLimit", configPointgrey.AutoGainUpperLimit);
+          getCameraFeature("GevSCPSPacketSize", configPointgrey.GevSCPSPacketSize_MTU);
+          getCameraFeature("TriggerMode", configPointgrey.TriggerMode);
+          
           reconfigureServerPointgrey.updateConfig(configPointgrey); // sync up with dynamic reconfig so everyone has the same config
-          reconfigureServerPointgrey.setCallback(reconfigureCallbackPointgrey);*/
+          reconfigureServerPointgrey.setCallback(reconfigureCallbackPointgrey);
         }
         else  if(node_name.find("avt_mako", 0) != std::string::npos)
         {
@@ -1051,6 +1566,43 @@ void CameraNode::Start()
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
           double valFromCam = arv_device_get_float_feature_value (pDevice, "AcquisitionFrameRateLimit");
           ROS_WARN_NAMED (NAME, "The maximum frame rate possible for the current exposure duration pixel format is %f", valFromCam);
+          
+          // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
+          //boost::recursive_mutex config_mutex;
+          dynamic_reconfigure::Server<MakoConfig>          reconfigureServerMako;
+          dynamic_reconfigure::Server<MakoConfig>::CallbackType      reconfigureCallbackMako;
+  	      reconfigureCallbackMako = boost::bind(&CameraNode::RosReconfigure_callback_mako, this,  _1, _2);
+          ros::Duration(1.0).sleep();
+          
+          getCameraFeature("AcquisitionMode", configMako.AcquisitionMode);
+          getCameraFeature("AcquisitionFrameRateAbs", configMako.AcquisitionFrameRateAbs);
+          getCameraFeature("ExposureAuto", configMako.ExposureAuto);
+          getCameraFeature("ExposureTimeAbs", configMako.ExposureTimeAbs);
+          getCameraFeature("ExposureAutoAlg", configMako.ExposureAutoAlg);
+          getCameraFeature("ExposureAutoAdjustTol", configMako.ExposureAutoAdjustTol);
+          getCameraFeature("ExposureAutoOutliers", configMako.ExposureAutoOutliers);
+          getCameraFeature("ExposureAutoTarget", configMako.ExposureAutoTarget);
+          getCameraFeature("ExposureAutoMin", configMako.ExposureAutoMin);
+          getCameraFeature("ExposureAutoMax", configMako.ExposureAutoMax);
+          
+          getCameraFeature("GainAuto", configMako.GainAuto);
+          getCameraFeature("Gain", configMako.Gain);
+          getCameraFeature("GainAutoAdjustTol", configMako.GainAutoAdjustTol);
+          getCameraFeature("GainAutoOutliers", configMako.GainAutoOutliers);
+          getCameraFeature("GainAutoTarget", configMako.GainAutoTarget);
+          getCameraFeature("GainAutoMin", configMako.GainAutoMin);
+          getCameraFeature("GainAutoMax", configMako.GainAutoMax);
+          
+          getCameraFeature("DSPSubregionLeft", configMako.DSPSubregionLeft);
+          getCameraFeature("DSPSubregionTop", configMako.DSPSubregionTop);
+          getCameraFeature("DSPSubregionRight", configMako.DSPSubregionRight);
+          getCameraFeature("DSPSubregionBottom", configMako.DSPSubregionBottom);
+          
+          getCameraFeature("GevSCPSPacketSize", configMako.GevSCPSPacketSize_MTU);
+          getCameraFeature("TriggerMode", configMako.TriggerMode);
+          
+          reconfigureServerMako.updateConfig(configMako); // sync up with dynamic reconfig so everyone has the same config
+          reconfigureServerMako.setCallback(reconfigureCallbackMako);
         }
         else if(node_name.find("avt_prosilica", 0) != std::string::npos)
         {
@@ -1083,6 +1635,43 @@ void CameraNode::Start()
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
           double valFromCam = arv_device_get_float_feature_value (pDevice, "AcquisitionFrameRateLimit");
           ROS_WARN_NAMED (NAME, "The maximum frame rate possible for the current exposure duration pixel format is %f", valFromCam);
+          
+          // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
+          //boost::recursive_mutex config_mutex;
+          dynamic_reconfigure::Server<ProsilicaConfig>          reconfigureServerProsilica;
+          dynamic_reconfigure::Server<ProsilicaConfig>::CallbackType      reconfigureCallbackProsilica;
+  	      reconfigureCallbackProsilica = boost::bind(&CameraNode::RosReconfigure_callback_prosilica, this,  _1, _2);
+          ros::Duration(1.0).sleep();
+          
+          getCameraFeature("AcquisitionMode", configProsilica.AcquisitionMode);
+          getCameraFeature("AcquisitionFrameRateAbs", configProsilica.AcquisitionFrameRateAbs);
+          getCameraFeature("ExposureAuto", configProsilica.ExposureAuto);
+          getCameraFeature("ExposureTimeAbs", configProsilica.ExposureTimeAbs);
+          getCameraFeature("ExposureAutoAlg", configProsilica.ExposureAutoAlg);
+          getCameraFeature("ExposureAutoAdjustTol", configProsilica.ExposureAutoAdjustTol);
+          getCameraFeature("ExposureAutoOutliers", configProsilica.ExposureAutoOutliers);
+          getCameraFeature("ExposureAutoTarget", configProsilica.ExposureAutoTarget);
+          getCameraFeature("ExposureAutoMin", configProsilica.ExposureAutoMin);
+          getCameraFeature("ExposureAutoMax", configProsilica.ExposureAutoMax);
+          
+          getCameraFeature("GainAuto", configProsilica.GainAuto);
+          getCameraFeature("Gain", configProsilica.Gain);
+          getCameraFeature("GainAutoAdjustTol", configProsilica.GainAutoAdjustTol);
+          getCameraFeature("GainAutoOutliers", configProsilica.GainAutoOutliers);
+          getCameraFeature("GainAutoTarget", configProsilica.GainAutoTarget);
+          getCameraFeature("GainAutoMin", configProsilica.GainAutoMin);
+          getCameraFeature("GainAutoMax", configProsilica.GainAutoMax);
+          
+          getCameraFeature("DSPSubregionLeft", configProsilica.DSPSubregionLeft);
+          getCameraFeature("DSPSubregionTop", configProsilica.DSPSubregionTop);
+          getCameraFeature("DSPSubregionRight", configProsilica.DSPSubregionRight);
+          getCameraFeature("DSPSubregionBottom", configProsilica.DSPSubregionBottom);
+          
+          getCameraFeature("GevSCPSPacketSize", configProsilica.GevSCPSPacketSize_MTU);
+          getCameraFeature("TriggerMode", configProsilica.TriggerMode);
+          
+          reconfigureServerProsilica.updateConfig(configProsilica); // sync up with dynamic reconfig so everyone has the same config
+          reconfigureServerProsilica.setCallback(reconfigureCallbackProsilica);
         }
         else if(node_name.find("ids_gv", 0) != std::string::npos)
         {  
@@ -1105,6 +1694,32 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          
+          // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
+          //boost::recursive_mutex config_mutex;
+          dynamic_reconfigure::Server<IDSConfig>          reconfigureServerIDS;
+          dynamic_reconfigure::Server<IDSConfig>::CallbackType      reconfigureCallbackIDS;
+  	      reconfigureCallbackIDS = boost::bind(&CameraNode::RosReconfigure_callback_IDS, this,  _1, _2);
+          ros::Duration(1.0).sleep();
+          
+          getCameraFeature("AcquisitionMode", configIDS.AcquisitionMode);
+          getCameraFeature("AcquisitionFrameRate", configIDS.AcquisitionFrameRate);
+          getCameraFeature("ExposureAuto", configIDS.ExposureAuto);
+          getCameraFeature("ExposureTime", configIDS.ExposureTime);
+          getCameraFeature("BrightnessAutoExposureTimeLimitMode", configIDS.BrightnessAutoExposureTimeLimitMode);
+          getCameraFeature("BrightnessAutoExposureTimeMin", configIDS.BrightnessAutoExposureTimeMin);
+          getCameraFeature("BrightnessAutoExposureTimeMax", configIDS.BrightnessAutoExposureTimeMax);
+          getCameraFeature("GainAuto", configIDS.GainAuto);
+          getCameraFeature("Gain", configIDS.Gain);
+          getCameraFeature("BrightnessAutoGainLimitMode", configIDS.BrightnessAutoGainLimitMode);
+          getCameraFeature("BrightnessAutoGainMin", configIDS.BrightnessAutoGainMin);
+          getCameraFeature("BrightnessAutoGainMax", configIDS.BrightnessAutoGainMax);
+          getCameraFeature("Gamma", configIDS.Gamma);
+          getCameraFeature("GevSCPSPacketSize", configIDS.GevSCPSPacketSize_MTU);
+          getCameraFeature("TriggerMode", configIDS.TriggerMode);
+          
+          reconfigureServerIDS.updateConfig(configIDS); // sync up with dynamic reconfig so everyone has the same config
+          reconfigureServerIDS.setCallback(reconfigureCallbackIDS);
         }
         else{
           ROS_INFO_NAMED (NAME, "Default camera parameters set");
