@@ -446,7 +446,7 @@ void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t leve
     
     configIDS = newconfig;
 
-} // RosReconfigure_callback_IDS()*/
+} // RosReconfigure_callback_IDS()
 
 void CameraNode::RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t level)
 {    
@@ -1329,7 +1329,17 @@ void CameraNode::Start()
     bCancel = FALSE;
 
     idSoftwareTriggerTimer = 0;
+    //boost::recursive_mutex config_mutex;
+    /*dynamic_reconfigure::Server<IDSConfig>          reconfigureServerIDS;
+    dynamic_reconfigure::Server<IDSConfig>::CallbackType      reconfigureCallbackIDS;
+    reconfigureCallbackIDS = boost::bind(&CameraNode::RosReconfigure_callback_IDS, this,  _1, _2);
+    ros::Duration(1.0).sleep();
 
+    //reconfigureServerIDS.updateConfig(configIDS); // sync up with dynamic reconfig so everyone has the same config
+    reconfigureServerIDS.setCallback(reconfigureCallbackIDS);
+
+    ros::spin();*/
+    
     // Print out some useful info.
     ROS_INFO_NAMED (NAME, "Attached cameras:");
     arv_update_device_list();
@@ -1444,7 +1454,7 @@ void CameraNode::Start()
           getCameraFeature("AutoGainLowerLimit", configPointgrey.AutoGainLowerLimit);
           getCameraFeature("AutoGainUpperLimit", configPointgrey.AutoGainUpperLimit);
 
-          reconfigureServerPointgrey.updateConfig(configPointgrey); // sync up with dynamic reconfig so everyone has the same config
+          //reconfigureServerPointgrey.updateConfig(configPointgrey); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerPointgrey.setCallback(reconfigureCallbackPointgrey);
         }
         else  if(node_name.find("avt_mako", 0) != std::string::npos)
@@ -1529,7 +1539,7 @@ void CameraNode::Start()
           getCameraFeature("DSPSubregionRight", configMako.DSPSubregionRight);
           getCameraFeature("DSPSubregionBottom", configMako.DSPSubregionBottom);
           
-          reconfigureServerMako.updateConfig(configMako); // sync up with dynamic reconfig so everyone has the same config
+          //reconfigureServerMako.updateConfig(configMako); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerMako.setCallback(reconfigureCallbackMako);
         }
         else if(node_name.find("avt_prosilica", 0) != std::string::npos)
@@ -1595,7 +1605,7 @@ void CameraNode::Start()
           getCameraFeature("DSPSubregionRight", configProsilica.DSPSubregionRight);
           getCameraFeature("DSPSubregionBottom", configProsilica.DSPSubregionBottom);
           
-          reconfigureServerProsilica.updateConfig(configProsilica); // sync up with dynamic reconfig so everyone has the same config
+          //reconfigureServerProsilica.updateConfig(configProsilica); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerProsilica.setCallback(reconfigureCallbackProsilica);
         }
         else if(node_name.find("ids_gv", 0) != std::string::npos)
@@ -1641,7 +1651,7 @@ void CameraNode::Start()
           getCameraFeature("BrightnessAutoGainMax", configIDS.BrightnessAutoGainMax);
           getCameraFeature("Gamma", configIDS.Gamma);
           
-          reconfigureServerIDS.updateConfig(configIDS); // sync up with dynamic reconfig so everyone has the same config
+          //reconfigureServerIDS.updateConfig(configIDS); // sync up with dynamic reconfig so everyone has the same config
           reconfigureServerIDS.setCallback(reconfigureCallbackIDS);
         }
         else{
