@@ -30,13 +30,13 @@
       <param name="GainAutoAdjustTol" value="2"/> <!--0 to 50 -->
       <param name="GainAutoOutliers" value="0"/> <!-- 1000 = 10% -->
       <param name="GainAutoTarget" value="10"/> <!-- 0=black to 100=white -->
-      <param name="GainAutoMin" value="-30.0"/>
+      <param name="GainAutoMin" value="0.0"/>
       <param name="GainAutoMax" value="30.0"/>
       
       <param name="DSPSubregionLeft" value="0"/>
       <param name="DSPSubregionTop" value="600"/>
-      <param name="DSPSubregionRight" value="2063"/>
-      <param name="DSPSubregionBottom" value="1350"/>
+      <param name="DSPSubregionRight" value="2063"/> <!--Max = 2063-->
+      <param name="DSPSubregionBottom" value="1350"/> <!--Max = 1543-->
 
       <param name="GevSCPSPacketSize" value="9000"/>
 

@@ -24,9 +24,10 @@
     
     <!--param name="Gain" value="1.0"/--> <!-- Manual control -->
     <param name="GainAuto" type="str" value="Continuous"/>
-    <param name="AutoGainLowerLimit" value="-30.0"/>
+    <param name="AutoGainLowerLimit" value="0.0"/>
     <param name="AutoGainUpperLimit" value="30.0"/>
-
+    <param name="BlackLevel" value="2"/>
+    
     <param name="GevSCPSPacketSize" value="9000"/>
 
     <param name="TriggerMode" type="str" value="Off"/>
