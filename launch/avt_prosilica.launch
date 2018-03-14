@@ -21,7 +21,7 @@
     <param name="ExposureAutoAlg" type="str" value="Mean"/>
     <param name="ExposureAutoAdjustTol" value="2"/> <!--0 to 50 -->
     <param name="ExposureAutoOutliers" value="0"/> <!-- 1000 = 10% -->
-    <param name="ExposureAutoTarget" value="20"/> <!-- 0=black to 100=white -->
+    <param name="ExposureAutoTarget" value="10"/> <!-- 0=black to 100=white -->
     <param name="ExposureAutoMin" value="50.0"/>
     <param name="ExposureAutoMax" value="35000.0"/>
     
@@ -29,14 +29,14 @@
     <param name="GainAuto" type="str" value="Continuous"/>
     <param name="GainAutoAdjustTol" value="2"/> <!--0 to 50 -->
     <param name="GainAutoOutliers" value="0"/> <!-- 1000 = 10% -->
-    <param name="GainAutoTarget" value="20"/> <!-- 0=black to 100=white -->
+    <param name="GainAutoTarget" value="10"/> <!-- 0=black to 100=white -->
     <param name="GainAutoMin" value="0.0"/>
     <param name="GainAutoMax" value="30.0"/>
     
     <param name="DSPSubregionLeft" value="0"/>
-    <param name="DSPSubregionTop" value="470"/>
+    <param name="DSPSubregionTop" value="650"/>
     <param name="DSPSubregionRight" value="1935"/> <!--Max = 1935-->
-    <param name="DSPSubregionBottom" value="1060"/> <!--Max = 1215-->
+    <param name="DSPSubregionBottom" value="1150"/> <!--Max = 1215-->
 
     <param name="GevSCPSPacketSize" value="9000"/>
 

@@ -31,7 +31,7 @@
     <param name="BrightnessAutoGainMin" value="-30"/>
     <param name="BrightnessAutoGainMax" value="30.0"/>
     
-    <param name="Gamma" value="1.0"/>
+    <param name="Gamma" value="1.3"/>
     
     <param name="GevSCPSPacketSize" value="9000"/>
     <param name="TriggerMode" type="str" value="Off"/>

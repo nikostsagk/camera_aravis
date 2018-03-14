@@ -34,9 +34,9 @@
       <param name="GainAutoMax" value="30.0"/>
       
       <param name="DSPSubregionLeft" value="0"/>
-      <param name="DSPSubregionTop" value="600"/>
+      <param name="DSPSubregionTop" value="750"/>
       <param name="DSPSubregionRight" value="2063"/> <!--Max = 2063-->
-      <param name="DSPSubregionBottom" value="1350"/> <!--Max = 1543-->
+      <param name="DSPSubregionBottom" value="1400"/> <!--Max = 1543-->
 
       <param name="GevSCPSPacketSize" value="9000"/>
 
