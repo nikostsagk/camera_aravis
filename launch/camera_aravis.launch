@@ -3,7 +3,7 @@
   <include file="$(find camera_aravis)/launch/avt_mako.launch"/>
   <include file="$(find camera_aravis)/launch/avt_prosilica.launch"/>
   <include file="$(find camera_aravis)/launch/ptgrey.launch"/>
-  <!--include file="$(find camera_aravis)/launch/ids_gv.launch"/--> <!-- Auto exposure -->
-  <include file="$(find camera_aravis)/launch/ids_gv_default_settings.launch"/> <!-- Default Cam settings -->
+  <include file="$(find camera_aravis)/launch/ids_gv.launch"/> <!-- Auto exposure -->
+  <!--include file="$(find camera_aravis)/launch/ids_gv_default_settings.launch"/--> <!-- Default Cam settings -->
   <!--include file="$(find camera_aravis)/launch/ids_gv_manual_exposure.launch"/--> <!-- Manual exposure time -->
 </launch>
