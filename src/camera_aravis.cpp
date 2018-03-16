@@ -300,7 +300,7 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
         }
       }
       else{
-        if(configMako.ExposureAuto == "Off"){
+        if(configPointgrey.ExposureAuto == "Off"){
           newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
           //ros::Duration(1.0).sleep();
         }
@@ -323,7 +323,7 @@ void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, u
         }
       }
       else{
-        if(configMako.GainAuto == "Off"){
+        if(configPointgrey.GainAuto == "Off"){
           newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
           //ros::Duration(1.0).sleep();
         }
@@ -486,7 +486,7 @@ void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t leve
         }
       }
       else{
-        if(configMako.ExposureAuto == "Off"){
+        if(configIDS.ExposureAuto == "Off"){
           newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
           //ros::Duration(1.0).sleep();
         }
@@ -509,7 +509,7 @@ void CameraNode::RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t leve
         }
       }
       else{
-        if(configMako.GainAuto == "Off"){
+        if(configIDS.GainAuto == "Off"){
           newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
           //ros::Duration(1.0).sleep();
         }
@@ -959,7 +959,7 @@ void CameraNode::RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, u
         }
       }
       else{
-        if(configMako.ExposureAuto == "Off"){
+        if(configProsilica.ExposureAuto == "Off"){
           newconfig.ExposureTimeAbs = setCameraFeature("ExposureTimeAbs", newconfig.ExposureTimeAbs);
           //ros::Duration(1.0).sleep();
         }
@@ -982,7 +982,7 @@ void CameraNode::RosReconfigure_callback_prosilica(ProsilicaConfig &newconfig, u
         }
       }
       else{
-        if(configMako.GainAuto == "Off"){
+        if(configProsilica.GainAuto == "Off"){
           newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
           //ros::Duration(1.0).sleep();
         }
