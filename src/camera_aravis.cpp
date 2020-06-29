@@ -313,20 +313,12 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
 
     if (changedExposureTime)
     {
-      if (changedExposureAuto)
+      if (configDalsa.ExposureAuto == "Off")
       {
-        if (configDalsa.ExposureAuto == "Off")
-        {
-          if (configDalsa.autoBrightnessMode == "Active")
-          {
-            newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
-          }
-          else
-            ROS_WARN ("autoBrightnessMode is not Active!");
-        }
-        else
-          ROS_WARN ("ExposureAuto is not Off!");
+        newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
       }
+      else
+        ROS_WARN ("ExposureAuto is not Off!");
     }
 
     if (changedExposureAuto)
