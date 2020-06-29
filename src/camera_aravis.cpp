@@ -202,7 +202,6 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     int             changedautoBrightnessTarget;
     int             changedautoBrightnessTargetRangeVariation;
     int             changedautoBrightnessAlgoMinTimeActivation;
-    int             changedautoBrightnessAlgoMaxTimeActivation;
     int             changedautoBrightnessAlgoConvergenceTime;
     int             changedExposureTime;
     int             changedExposureAuto;
@@ -222,7 +221,6 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     changedautoBrightnessTarget = (newconfig.autoBrightnessTarget != configDalsa.autoBrightnessTarget);
     changedautoBrightnessTargetRangeVariation  = (newconfig.autoBrightnessTargetRangeVariation != configDalsa.autoBrightnessTargetRangeVariation);
     changedautoBrightnessAlgoMinTimeActivation  = (newconfig.autoBrightnessAlgoMinTimeActivation != configDalsa.autoBrightnessAlgoMinTimeActivation);
-    changedautoBrightnessAlgoMaxTimeActivation  = (newconfig.autoBrightnessAlgoMaxTimeActivation != configDalsa.autoBrightnessAlgoMaxTimeActivation);
     changedautoBrightnessAlgoConvergenceTime = (newconfig.autoBrightnessAlgoConvergenceTime != configDalsa.autoBrightnessAlgoConvergenceTime);
     
     changedExposureTime = (newconfig.ExposureTime != configDalsa.ExposureTime);
@@ -246,83 +244,175 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
 
     if (changedAcquisitionFrameRate)
     {
+      arv_device_execute_command (pDevice, "AcquisitionStop");
       newconfig.AcquisitionFrameRate = setCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
+      arv_device_execute_command (pDevice, "AcquisitionStart");
     }
 
     if (changedautoBrightnessMode)
     {
+      arv_device_execute_command (pDevice, "AcquisitionStop");
       newconfig.autoBrightnessMode = setCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
+      arv_device_execute_command (pDevice, "AcquisitionStart");
     }
 
     if (changedautoBrightnessTarget)
     {
-      newconfig.autoBrightnessTarget = setCameraFeature("autoBrightnessTarget", newconfig.autoBrightnessTarget);
+      if (configDalsa.autoBrightnessMode == "Active")
+      {
+        newconfig.autoBrightnessTarget = setCameraFeature("autoBrightnessTarget", newconfig.autoBrightnessTarget);
+      }
+      else
+        ROS_WARN ("autoBrightnessMode is not Active!");
     }
 
     if (changedautoBrightnessTargetRangeVariation)
     {
-      newconfig.autoBrightnessTargetRangeVariation = setCameraFeature("autoBrightnessTargetRangeVariation", newconfig.autoBrightnessTargetRangeVariation);
+      if (configDalsa.autoBrightnessMode == "Active")
+      {
+        newconfig.autoBrightnessTargetRangeVariation = setCameraFeature("autoBrightnessTargetRangeVariation", newconfig.autoBrightnessTargetRangeVariation);
+      }
+      else
+        ROS_WARN ("autoBrightnessMode is not Active!");
     }
     
     if (changedautoBrightnessAlgoMinTimeActivation)
     {
-      newconfig.autoBrightnessAlgoMinTimeActivation = setCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
+      if (configDalsa.autoBrightnessMode == "Active")
+      {
+        newconfig.autoBrightnessAlgoMinTimeActivation = setCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
+      }
+      else
+        ROS_WARN ("autoBrightnessMode is not Active!");
     }
     
-    if (changedautoBrightnessAlgoMaxTimeActivation)
-    {
-      newconfig.autoBrightnessAlgoMinTimeActivation = setCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
-    }
 
     if (changedautoBrightnessAlgoConvergenceTime)
     {
-      newconfig.autoBrightnessAlgoConvergenceTime = setCameraFeature("autoBrightnessAlgoConvergenceTime", newconfig.autoBrightnessAlgoConvergenceTime);
+      if (configDalsa.autoBrightnessMode == "Active")
+      {
+        newconfig.autoBrightnessAlgoConvergenceTime = setCameraFeature("autoBrightnessAlgoConvergenceTime", newconfig.autoBrightnessAlgoConvergenceTime);
+      }
+      else
+        ROS_WARN ("autoBrightnessMode is not Active!");
+    }
+
+    if (changedExposureTime)
+    {
+      if (changedExposureAuto)
+      {
+        if (configDalsa.ExposureAuto == "Off")
+        {
+          if (configDalsa.autoBrightnessMode == "Active")
+          {
+            newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
+          }
+          else
+            ROS_WARN ("autoBrightnessMode is not Active!");
+        }
+        else
+          ROS_WARN ("ExposureAuto is not Off!");
+      }
     }
 
     if (changedExposureAuto)
     {
-      setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
-      ros::Duration(1.0).sleep();
-      if (newconfig.ExposureAuto=="Once")
+      if (newconfig.ExposureAuto == "Once")
       {
-          newconfig.ExposureAuto = "Off";
+        ROS_WARN ("ExposureAuto could be set 'Off' or 'Continuous'");
+      }
+      else { // if ExposureAuto has valid value
+        if (configDalsa.autoBrightnessMode == "Active")
+        {
+          arv_device_execute_command (pDevice, "AcquisitionStop");
           setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
           //ros::Duration(1.0).sleep();
+          arv_device_execute_command (pDevice, "AcquisitionStart");
+        }
+        else
+          ROS_WARN ("autoBrightnessMode is not Active!");
       }
-      getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
     }
     
     if (changedexposureAutoMinValue)
     {
-      newconfig.exposureAutoMinValue = setCameraFeature("exposureAutoMinValue", newconfig.exposureAutoMinValue);
+      if (configDalsa.autoBrightnessMode == "Active")
+        {
+          if (configDalsa.ExposureAuto == "Continuous")
+          {
+            newconfig.exposureAutoMinValue = setCameraFeature("exposureAutoMinValue", newconfig.exposureAutoMinValue);
+          }
+          else
+            ROS_WARN ("ExposureAuto is not Continuous!");
+        }
+      else
+        ROS_WARN ("autoBrightnessMode is not Active!");
     }
     
     if (changedexposureAutoMaxValue)
     {
-      newconfig.exposureAutoMaxValue = setCameraFeature("exposureAutoMaxValue", newconfig.exposureAutoMaxValue);
+      if (configDalsa.autoBrightnessMode == "Active")
+        {
+          if (configDalsa.ExposureAuto == "Continuous")
+          {
+            newconfig.exposureAutoMaxValue = setCameraFeature("exposureAutoMaxValue", newconfig.exposureAutoMaxValue);
+          }
+          else 
+            ROS_WARN ("ExposureAuto is not active!");
+        }
+      else
+        ROS_WARN ("autoBrightnessMode is not active!");
     }
     
+    if (changedGain)
+    {
+      newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
+    }
+
     if (changedGainAuto)
     {
-      setCameraFeature("GainAuto", newconfig.GainAuto);
-      //ros::Duration(1.0).sleep();
       if (newconfig.GainAuto=="Once")
       {
-          newconfig.GainAuto = "Off";
-          setCameraFeature("GainAuto", newconfig.GainAuto);
-          //ros::Duration(1.0).sleep();
+        ROS_WARN ("GainAuto could be set 'Off' or 'Continuous'");
       }
-      getCameraFeature("GainAuto", newconfig.GainAuto);
+      else {
+        if (configDalsa.autoBrightnessMode == "Active")
+        {
+          setCameraFeature("GainAuto", newconfig.GainAuto);
+        }
+        else
+          ROS_WARN ("autoBrightnessMode is not active!");
+      }
     }
     
     if (changedgainAutoMinValue)
     {
-      newconfig.gainAutoMinValue = setCameraFeature("gainAutoMinValue", newconfig.gainAutoMinValue);
+      if (configDalsa.autoBrightnessMode == "Active")
+        {
+          if (configDalsa.GainAuto == "Continuous")
+          {
+            newconfig.gainAutoMinValue = setCameraFeature("gainAutoMinValue", newconfig.gainAutoMinValue);
+          }
+          else
+            ROS_WARN ("GainAuto is not active!");
+        }
+      else
+        ROS_WARN ("autoBrightnessMode is not active!");
     }
     
     if (changedgainAutoMaxValue)
     {
-      newconfig.gainAutoMinValue = setCameraFeature("gainAutoMaxValue", newconfig.gainAutoMinValue);
+      if (configDalsa.autoBrightnessMode == "Active")
+        {
+          if (configDalsa.GainAuto == "Continuous")
+          {
+            newconfig.gainAutoMaxValue = setCameraFeature("gainAutoMaxValue", newconfig.gainAutoMaxValue);
+          }
+          else
+            ROS_WARN ("GainAuto is not active!");
+        }
+      else
+        ROS_WARN ("autoBrightnessMode is not active!");
     }
     
     if (changedBlackLevel)
@@ -330,62 +420,14 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
       newconfig.BlackLevel = setCameraFeature("BlackLevel", newconfig.BlackLevel);
     }
     
-    // Adjust other controls dependent on what the user changed.
-    if(changedExposureAuto){
-      if(newconfig.ExposureAuto == "Continuous"){
-        changedExposureTime = 0;
-      }
-    }
-    
-    if (changedExposureTime)
-    {
-      if (changedExposureAuto)
-      {
-        if(newconfig.ExposureAuto == "Off"){
-          newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
-          //ros::Duration(1.0).sleep();
-        }
-      }
-      else{
-        if(configDalsa.ExposureAuto == "Off"){
-          newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
-          //ros::Duration(1.0).sleep();
-        }
-      }
-    }
-    
-    if(changedGainAuto){
-      if(newconfig.GainAuto == "Continuous"){
-        changedGain = 0;
-      }
-    }
-    
-    if (changedGain)
-    {
-      if (changedGainAuto)
-      {
-        if(newconfig.GainAuto == "Off"){
-          newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
-          //ros::Duration(1.0).sleep();
-        }
-      }
-      else{
-        if(configDalsa.GainAuto == "Off"){
-          newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
-          //ros::Duration(1.0).sleep();
-        }
-      }
-    }
-    
-    arv_device_execute_command (pDevice, "AcquisitionStop");
-    arv_device_execute_command (pDevice, "AcquisitionStart");
+    //arv_device_execute_command (pDevice, "AcquisitionStop");
+    //arv_device_execute_command (pDevice, "AcquisitionStart");
     getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
     getCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
     getCameraFeature("autoBrightnessTarget", newconfig.autoBrightnessTarget);
     getCameraFeature("autoBrightnessTargetRangeVariation", newconfig.autoBrightnessTargetRangeVariation);
     getCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
-    getCameraFeature("autoBrightnessAlgoMaxTimeActivation", newconfig.autoBrightnessAlgoMaxTimeActivation);
     getCameraFeature("autoBrightnessAlgoConvergenceTime", newconfig.autoBrightnessAlgoConvergenceTime);
     getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
     getCameraFeature("ExposureTime", newconfig.ExposureTime);
@@ -1790,7 +1832,6 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "autoBrightnessTarget", "int");
           setFeatureFromParam(nh, "autoBrightnessTargetRangeVariation", "int");
           setFeatureFromParam(nh, "autoBrightnessAlgoMinTimeActivation", "float");
-          setFeatureFromParam(nh, "autoBrightnessAlgoMaxTimeActivation", "float");
           setFeatureFromParam(nh, "autoBrightnessAlgoConvergenceTime", "float");
           setFeatureFromParam(nh, "ExposureAuto", "str");
           setFeatureFromParam(nh, "ExposureTime", "float");
