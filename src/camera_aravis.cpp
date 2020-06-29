@@ -199,6 +199,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     int             changedAcquisitionMode;
     int             changedAcquisitionFrameRate;
     int             changedautoBrightnessMode;
+    int             changedautoBrightnessSequence;
     int             changedautoBrightnessTarget;
     int             changedautoBrightnessTargetRangeVariation;
     int             changedautoBrightnessAlgoMinTimeActivation;
@@ -218,6 +219,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     changedAcquisitionFrameRate = (newconfig.AcquisitionFrameRate != configDalsa.AcquisitionFrameRate);
 
     changedautoBrightnessMode   = (newconfig.autoBrightnessMode != configDalsa.autoBrightnessMode);
+    changedautoBrightnessSequence = (newconfig.autoBrightnessSequence != configDalsa.autoBrightnessSequence);
     changedautoBrightnessTarget = (newconfig.autoBrightnessTarget != configDalsa.autoBrightnessTarget);
     changedautoBrightnessTargetRangeVariation  = (newconfig.autoBrightnessTargetRangeVariation != configDalsa.autoBrightnessTargetRangeVariation);
     changedautoBrightnessAlgoMinTimeActivation  = (newconfig.autoBrightnessAlgoMinTimeActivation != configDalsa.autoBrightnessAlgoMinTimeActivation);
@@ -254,6 +256,18 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
       arv_device_execute_command (pDevice, "AcquisitionStop");
       newconfig.autoBrightnessMode = setCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
       arv_device_execute_command (pDevice, "AcquisitionStart");
+    }
+
+    if (changedautoBrightnessSequence)
+    {
+      if (configDalsa.autoBrightnessMode == "Active")
+      {
+        arv_device_execute_command (pDevice, "AcquisitionStop");
+        newconfig.autoBrightnessSequence = setCameraFeature("autoBrightnessSequence", newconfig.autoBrightnessSequence);
+        arv_device_execute_command (pDevice, "AcquisitionStart");
+      }
+      else
+        ROS_WARN ("autoBrightnessMode is not Active!");
     }
 
     if (changedautoBrightnessTarget)
@@ -425,6 +439,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
     getCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
+    getCameraFeature("autoBrightnessSequence", newconfig.autoBrightnessSequence);
     getCameraFeature("autoBrightnessTarget", newconfig.autoBrightnessTarget);
     getCameraFeature("autoBrightnessTargetRangeVariation", newconfig.autoBrightnessTargetRangeVariation);
     getCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
@@ -1829,6 +1844,7 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRate", "float");
           setFeatureFromParam(nh, "autoBrightnessMode", "str");
+          setFeatureFromParam(nh, "autoBrightnessSequence", "str");
           setFeatureFromParam(nh, "autoBrightnessTarget", "int");
           setFeatureFromParam(nh, "autoBrightnessTargetRangeVariation", "int");
           setFeatureFromParam(nh, "autoBrightnessAlgoMinTimeActivation", "float");
