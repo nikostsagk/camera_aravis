@@ -27,10 +27,11 @@ include_directories(include cfg/cpp
                     ${GLIB2_INCLUDE_DIRS}
                     )
 
-generate_dynamic_reconfigure_options(cfg/CameraAravis_Mako.cfg
-            cfg/CameraAravis_Prosilica.cfg
-            cfg/CameraAravis_IDS.cfg
-            cfg/CameraAravis_Pointgrey.cfg
+generate_dynamic_reconfigure_options(cfg/CameraAravisMako.cfg
+            cfg/CameraAravisProsilica.cfg
+            cfg/CameraAravisIDS.cfg
+            cfg/CameraAravisPointgrey.cfg
+            cfg/CameraAravisDalsa.cfg
             )
             
 add_message_files(

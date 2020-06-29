@@ -71,16 +71,20 @@ bool CameraNode::setCameraFeature(std::string featureName, bool featureVal){
 }
 void CameraNode::getCameraFeature(std::string featureName, std::string& featureVal){
   featureVal = arv_device_get_string_feature_value (pDevice, featureName.c_str());
+  ROS_INFO ("Get %s = %s", featureName.c_str(), featureVal.c_str());
 }
 void CameraNode::getCameraFeature(std::string featureName, int& featureVal){
   featureVal = arv_device_get_integer_feature_value (pDevice, featureName.c_str());
+  ROS_INFO ("Get %s = %d", featureName.c_str(), featureVal);
 }
 void CameraNode::getCameraFeature(std::string featureName, double& featureVal){
   featureVal = arv_device_get_float_feature_value (pDevice, featureName.c_str());
+  ROS_INFO ("Get %s = %f", featureName.c_str(), featureVal);
 }
 void CameraNode::getCameraFeature(std::string featureName, bool& featureVal){
   gboolean valFromCam = arv_device_get_boolean_feature_value (pDevice, featureName.c_str());
   featureVal = valFromCam?true:false;
+  ROS_INFO ("Get %s = %d", featureName.c_str(), valFromCam);
 }
 
 void CameraNode::setFeatureFromParam(ros::NodeHandle &nh, std::string paramName, std::string type){
@@ -189,6 +193,212 @@ ArvGvStream* CameraNode::CreateStream(ros::NodeHandle &nh)
     }
     return pStream;
 } // CreateStream()
+
+void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t level)
+{    
+    int             changedAcquisitionMode;
+    int             changedAcquisitionFrameRate;
+    int             changedautoBrightnessMode;
+    int             changedautoBrightnessTarget;
+    int             changedautoBrightnessTargetRangeVariation;
+    int             changedautoBrightnessAlgoMinTimeActivation;
+    int             changedautoBrightnessAlgoMaxTimeActivation;
+    int             changedautoBrightnessAlgoConvergenceTime;
+    int             changedExposureTime;
+    int             changedExposureAuto;
+    int             changedexposureAutoMinValue;
+    int             changedexposureAutoMaxValue;
+    int             changedGain;
+    int             changedGainAuto;
+    int             changedgainAutoMinValue;
+    int             changedgainAutoMaxValue;
+    int             changedBlackLevel;
+    
+    // Find what the user changed.
+    changedAcquisitionMode      = (newconfig.AcquisitionMode != configDalsa.AcquisitionMode);
+    changedAcquisitionFrameRate = (newconfig.AcquisitionFrameRate != configDalsa.AcquisitionFrameRate);
+
+    changedautoBrightnessMode   = (newconfig.autoBrightnessMode != configDalsa.autoBrightnessMode);
+    changedautoBrightnessTarget = (newconfig.autoBrightnessTarget != configDalsa.autoBrightnessTarget);
+    changedautoBrightnessTargetRangeVariation  = (newconfig.autoBrightnessTargetRangeVariation != configDalsa.autoBrightnessTargetRangeVariation);
+    changedautoBrightnessAlgoMinTimeActivation  = (newconfig.autoBrightnessAlgoMinTimeActivation != configDalsa.autoBrightnessAlgoMinTimeActivation);
+    changedautoBrightnessAlgoMaxTimeActivation  = (newconfig.autoBrightnessAlgoMaxTimeActivation != configDalsa.autoBrightnessAlgoMaxTimeActivation);
+    changedautoBrightnessAlgoConvergenceTime = (newconfig.autoBrightnessAlgoConvergenceTime != configDalsa.autoBrightnessAlgoConvergenceTime);
+    
+    changedExposureTime = (newconfig.ExposureTime != configDalsa.ExposureTime);
+    changedExposureAuto = (newconfig.ExposureAuto != configDalsa.ExposureAuto);
+    changedexposureAutoMinValue = (newconfig.exposureAutoMinValue != configDalsa.exposureAutoMinValue);
+    changedexposureAutoMaxValue = (newconfig.exposureAutoMaxValue != configDalsa.exposureAutoMaxValue);
+    
+    changedGain         		= (newconfig.Gain != configDalsa.Gain);
+    changedGainAuto     		= (newconfig.GainAuto != configDalsa.GainAuto);
+    changedgainAutoMinValue = (newconfig.gainAutoMinValue != configDalsa.gainAutoMinValue);
+    changedgainAutoMaxValue = (newconfig.gainAutoMaxValue != configDalsa.gainAutoMaxValue);
+    changedBlackLevel   = (newconfig.BlackLevel != configDalsa.BlackLevel);
+    
+    ROS_INFO_NAMED (NAME, "Inside Dynamic Reconfigure");
+    // Set params into the camera.
+    if (changedAcquisitionMode)
+    {
+      newconfig.AcquisitionMode = setCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+      //ros::Duration(1.0).sleep();
+    }
+
+    if (changedAcquisitionFrameRate)
+    {
+      newconfig.AcquisitionFrameRate = setCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
+    }
+
+    if (changedautoBrightnessMode)
+    {
+      newconfig.autoBrightnessMode = setCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
+    }
+
+    if (changedautoBrightnessTarget)
+    {
+      newconfig.autoBrightnessTarget = setCameraFeature("autoBrightnessTarget", newconfig.autoBrightnessTarget);
+    }
+
+    if (changedautoBrightnessTargetRangeVariation)
+    {
+      newconfig.autoBrightnessTargetRangeVariation = setCameraFeature("autoBrightnessTargetRangeVariation", newconfig.autoBrightnessTargetRangeVariation);
+    }
+    
+    if (changedautoBrightnessAlgoMinTimeActivation)
+    {
+      newconfig.autoBrightnessAlgoMinTimeActivation = setCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
+    }
+    
+    if (changedautoBrightnessAlgoMaxTimeActivation)
+    {
+      newconfig.autoBrightnessAlgoMinTimeActivation = setCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
+    }
+
+    if (changedautoBrightnessAlgoConvergenceTime)
+    {
+      newconfig.autoBrightnessAlgoConvergenceTime = setCameraFeature("autoBrightnessAlgoConvergenceTime", newconfig.autoBrightnessAlgoConvergenceTime);
+    }
+
+    if (changedExposureAuto)
+    {
+      setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+      ros::Duration(1.0).sleep();
+      if (newconfig.ExposureAuto=="Once")
+      {
+          newconfig.ExposureAuto = "Off";
+          setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+          //ros::Duration(1.0).sleep();
+      }
+      getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+    }
+    
+    if (changedexposureAutoMinValue)
+    {
+      newconfig.exposureAutoMinValue = setCameraFeature("exposureAutoMinValue", newconfig.exposureAutoMinValue);
+    }
+    
+    if (changedexposureAutoMaxValue)
+    {
+      newconfig.exposureAutoMaxValue = setCameraFeature("exposureAutoMaxValue", newconfig.exposureAutoMaxValue);
+    }
+    
+    if (changedGainAuto)
+    {
+      setCameraFeature("GainAuto", newconfig.GainAuto);
+      //ros::Duration(1.0).sleep();
+      if (newconfig.GainAuto=="Once")
+      {
+          newconfig.GainAuto = "Off";
+          setCameraFeature("GainAuto", newconfig.GainAuto);
+          //ros::Duration(1.0).sleep();
+      }
+      getCameraFeature("GainAuto", newconfig.GainAuto);
+    }
+    
+    if (changedgainAutoMinValue)
+    {
+      newconfig.gainAutoMinValue = setCameraFeature("gainAutoMinValue", newconfig.gainAutoMinValue);
+    }
+    
+    if (changedgainAutoMaxValue)
+    {
+      newconfig.gainAutoMinValue = setCameraFeature("gainAutoMaxValue", newconfig.gainAutoMinValue);
+    }
+    
+    if (changedBlackLevel)
+    {
+      newconfig.BlackLevel = setCameraFeature("BlackLevel", newconfig.BlackLevel);
+    }
+    
+    // Adjust other controls dependent on what the user changed.
+    if(changedExposureAuto){
+      if(newconfig.ExposureAuto == "Continuous"){
+        changedExposureTime = 0;
+      }
+    }
+    
+    if (changedExposureTime)
+    {
+      if (changedExposureAuto)
+      {
+        if(newconfig.ExposureAuto == "Off"){
+          newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
+          //ros::Duration(1.0).sleep();
+        }
+      }
+      else{
+        if(configDalsa.ExposureAuto == "Off"){
+          newconfig.ExposureTime = setCameraFeature("ExposureTime", newconfig.ExposureTime);
+          //ros::Duration(1.0).sleep();
+        }
+      }
+    }
+    
+    if(changedGainAuto){
+      if(newconfig.GainAuto == "Continuous"){
+        changedGain = 0;
+      }
+    }
+    
+    if (changedGain)
+    {
+      if (changedGainAuto)
+      {
+        if(newconfig.GainAuto == "Off"){
+          newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
+          //ros::Duration(1.0).sleep();
+        }
+      }
+      else{
+        if(configDalsa.GainAuto == "Off"){
+          newconfig.Gain = setCameraFeature("Gain", newconfig.Gain);
+          //ros::Duration(1.0).sleep();
+        }
+      }
+    }
+    
+    arv_device_execute_command (pDevice, "AcquisitionStop");
+    arv_device_execute_command (pDevice, "AcquisitionStart");
+    getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+    getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
+    getCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
+    getCameraFeature("autoBrightnessTarget", newconfig.autoBrightnessTarget);
+    getCameraFeature("autoBrightnessTargetRangeVariation", newconfig.autoBrightnessTargetRangeVariation);
+    getCameraFeature("autoBrightnessAlgoMinTimeActivation", newconfig.autoBrightnessAlgoMinTimeActivation);
+    getCameraFeature("autoBrightnessAlgoMaxTimeActivation", newconfig.autoBrightnessAlgoMaxTimeActivation);
+    getCameraFeature("autoBrightnessAlgoConvergenceTime", newconfig.autoBrightnessAlgoConvergenceTime);
+    getCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+    getCameraFeature("ExposureTime", newconfig.ExposureTime);
+    getCameraFeature("exposureAutoMinValue", newconfig.exposureAutoMinValue);
+    getCameraFeature("exposureAutoMaxValue", newconfig.exposureAutoMaxValue);
+    getCameraFeature("Gain", newconfig.Gain);
+    getCameraFeature("GainAuto", newconfig.GainAuto);
+    getCameraFeature("gainAutoMinValue", newconfig.gainAutoMinValue);
+    getCameraFeature("gainAutoMaxValue", newconfig.gainAutoMaxValue);
+    getCameraFeature("BlackLevel", newconfig.BlackLevel);
+    configDalsa = newconfig;
+} // RosReconfigure_callback_dalsa()
+
 
 void CameraNode::RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, uint32_t level)
 {    
@@ -1435,6 +1645,13 @@ void CameraNode::Start()
     ArvGcNode	*pGcNode;
     GError		*error=NULL;
 
+    // TODO: Fix dynamic_reconfigure problem
+    reconfigureServerDalsa      = new dynamic_reconfigure::Server<DalsaConfig> ();
+    //reconfigureServerPointgrey  = new dynamic_reconfigure::Server<PointgreyConfig> ();
+    //reconfigureServerMako       = new dynamic_reconfigure::Server<MakoConfig> ();
+    //reconfigureServerProsilica  = new dynamic_reconfigure::Server<ProsilicaConfig> ();
+    //reconfigureServerIDS        = new dynamic_reconfigure::Server<IDSConfig> ();
+
     applicationData.nBuffers = 0;
     applicationData.main_loop = 0;
     applicationData.past_completed_buffers = 0;
@@ -1563,7 +1780,59 @@ void CameraNode::Start()
         }
         ROS_INFO_NAMED (NAME, "    BytesPerPixel        = %d", nBytesPixel);
         
-        if(node_name.find("pointgrey", 0) != std::string::npos)
+        if(node_name.find("dalsa", 0) != std::string::npos)
+        {
+          ROS_INFO_NAMED (NAME, " Setting Parameters for dalsa camera");
+          ROS_INFO_NAMED (NAME, "    ---------------------------");
+          setFeatureFromParam(nh, "AcquisitionMode", "str");
+          setFeatureFromParam(nh, "AcquisitionFrameRate", "float");
+          setFeatureFromParam(nh, "autoBrightnessMode", "str");
+          setFeatureFromParam(nh, "autoBrightnessTarget", "int");
+          setFeatureFromParam(nh, "autoBrightnessTargetRangeVariation", "int");
+          setFeatureFromParam(nh, "autoBrightnessAlgoMinTimeActivation", "float");
+          setFeatureFromParam(nh, "autoBrightnessAlgoMaxTimeActivation", "float");
+          setFeatureFromParam(nh, "autoBrightnessAlgoConvergenceTime", "float");
+          setFeatureFromParam(nh, "ExposureAuto", "str");
+          setFeatureFromParam(nh, "ExposureTime", "float");
+          setFeatureFromParam(nh, "exposureAutoMinValue", "float");
+          setFeatureFromParam(nh, "exposureAutoMaxValue", "float");
+          setFeatureFromParam(nh, "Gain", "float");
+          setFeatureFromParam(nh, "GainAuto", "str");
+          setFeatureFromParam(nh, "gainAutoMinValue", "float");
+          setFeatureFromParam(nh, "gainAutoMaxValue", "float");
+          setFeatureFromParam(nh, "BlackLevel", "float");
+          setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
+          setFeatureFromParam(nh, "TriggerMode", "str");
+          arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+          
+          // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
+          //boost::recursive_mutex config_mutex;
+
+          // TODO: Fix dynamic_reconfigure problem
+          //dynamic_reconfigure::Server<DalsaConfig>          reconfigureServerDalsa;
+
+          dynamic_reconfigure::Server<DalsaConfig>::CallbackType      reconfigureCallbackDalsa;
+  	      reconfigureCallbackDalsa = boost::bind(&CameraNode::RosReconfigure_callback_dalsa, this,  _1, _2);
+          //ros::Duration(1.0).sleep();
+
+          /*getCameraFeature("AcquisitionMode", configDalsa.AcquisitionMode);
+          getCameraFeature("AcquisitionFrameRate", configDalsa.AcquisitionFrameRate);
+          getCameraFeature("ExposureAuto", configDalsa.ExposureAuto);
+          getCameraFeature("ExposureTime", configDalsa.ExposureTime);
+          getCameraFeature("exposureAutoMinValue", configDalsa.exposureAutoMinValue);
+          getCameraFeature("exposureAutoMinValue", configDalsa.exposureAutoMinValue);
+          getCameraFeature("GainAuto", configDalsa.GainAuto);
+          getCameraFeature("Gain", configDalsa.Gain);
+          getCameraFeature("gainAutoMinValue", configDalsa.gainAutoMinValue);
+          getCameraFeature("gainAutoMaxValue", configDalsa.gainAutoMaxValue);
+          getCameraFeature("BlackLevel", configDalsa.BlackLevel);*/
+          
+          //reconfigureServerDalsa.updateConfig(configDalsa); // sync up with dynamic reconfig so everyone has the same config
+          assert(("reconfigureServerDalsa is null ", reconfigureServerDalsa != 0));
+          reconfigureServerDalsa->setCallback(reconfigureCallbackDalsa);
+            
+        }
+        else if (node_name.find("pointgrey", 0) != std::string::npos)
         {
           ROS_INFO_NAMED (NAME, " Setting Parameters for pointgrey camera");
           ROS_INFO_NAMED (NAME, "    ---------------------------");

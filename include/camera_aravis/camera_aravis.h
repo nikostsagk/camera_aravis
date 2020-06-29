@@ -42,6 +42,7 @@
 #include <camera_aravis/CameraAravisMakoConfig.h>
 #include <camera_aravis/CameraAravisProsilicaConfig.h>
 #include <camera_aravis/CameraAravisPointgreyConfig.h>
+#include <camera_aravis/CameraAravisDalsaConfig.h>
 
 #include <boost/thread.hpp>
 
@@ -86,6 +87,7 @@ class CameraNode
   typedef camera_aravis::CameraAravisMakoConfig MakoConfig;
   typedef camera_aravis::CameraAravisProsilicaConfig ProsilicaConfig;
   typedef camera_aravis::CameraAravisPointgreyConfig PointgreyConfig;
+  typedef camera_aravis::CameraAravisDalsaConfig DalsaConfig;
 
   typedef struct
   {
@@ -110,6 +112,7 @@ class CameraNode
 
   ArvGvStream *CreateStream(ros::NodeHandle &nh);
 
+  void RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t level);
   void RosReconfigure_callback_pointgrey(PointgreyConfig &newconfig, uint32_t level);
   void RosReconfigure_callback_IDS(IDSConfig &newconfig, uint32_t level);
   void RosReconfigure_callback_mako(MakoConfig &newconfig, uint32_t level);
@@ -158,10 +161,17 @@ private:
   image_transport::CameraPublisher        publisher;
   camera_info_manager::CameraInfoManager *pCameraInfoManager;
 
+  //dynamic_reconfigure::Server<IDSConfig>       *reconfigureServerIDS;
+  //dynamic_reconfigure::Server<MakoConfig>      *reconfigureServerMako;
+  //dynamic_reconfigure::Server<ProsilicaConfig> *reconfigureServerProsilica;
+  //dynamic_reconfigure::Server<PointgreyConfig> *reconfigureServerPointgrey;
+  dynamic_reconfigure::Server<DalsaConfig>     *reconfigureServerDalsa;
+
   IDSConfig                               configIDS;
   MakoConfig                              configMako;
   ProsilicaConfig                         configProsilica;
   PointgreyConfig                         configPointgrey;
+  DalsaConfig                             configDalsa;
   
   int                                     idSoftwareTriggerTimer;
   
