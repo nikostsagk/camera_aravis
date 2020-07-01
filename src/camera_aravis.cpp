@@ -1322,9 +1322,12 @@ void CameraNode::NewBuffer_callback (ArvStream *pStream, gpointer* data)
             size_t buffer_size;
             char *buffer_data = (char *) arv_buffer_get_data (pBuffer, &buffer_size);
 
+            // TWeak buffer to match width*height
+            buffer_size = This->widthRoi*This->heightRoi;
+
             This->applicationData.nBuffers++;
             std::vector<uint8_t> this_data(buffer_size);
-            memcpy(&this_data[0], buffer_data, buffer_size);
+            memcpy(&this_data[0], buffer_data, buffer_size * This->nBytesPixel); // Prune data exceeding modified buffer_size
 
 
             // Camera/ROS Timestamp coordination.
