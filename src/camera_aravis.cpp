@@ -267,8 +267,8 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
       newconfig.autoBrightnessMode = setCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
       if (newconfig.autoBrightnessMode == "Off")
       { // If autoBrightness goes Off, disable ExposureAuto, GainAuto
-        newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
-        newconfig.GainAuto     = setCameraFeature("GainAuto", newconfig.GainAuto);
+        newconfig.ExposureAuto = setCameraFeature("ExposureAuto", std::string("Off"));
+        newconfig.GainAuto     = setCameraFeature("GainAuto", std::string("Off"));
       }
       arv_device_execute_command (pDevice, "AcquisitionStart");
     }
@@ -346,7 +346,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
         if (configDalsa.autoBrightnessMode == "Active")
         {
           arv_device_execute_command (pDevice, "AcquisitionStop");
-          setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+          newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
           //ros::Duration(1.0).sleep();
           arv_device_execute_command (pDevice, "AcquisitionStart");
         }
@@ -399,7 +399,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
       else {
         if (configDalsa.autoBrightnessMode == "Active")
         {
-          setCameraFeature("GainAuto", newconfig.GainAuto);
+          newconfig.GainAuto = setCameraFeature("GainAuto", newconfig.GainAuto);
         }
         else
           ROS_WARN ("autoBrightnessMode is not active!");
