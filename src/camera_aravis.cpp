@@ -196,6 +196,7 @@ ArvGvStream* CameraNode::CreateStream(ros::NodeHandle &nh)
 
 void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t level)
 {    
+    int             changedAcquire;
     int             changedAcquisitionMode;
     int             changedAcquisitionFrameRate;
     int             changedautoBrightnessMode;
@@ -215,6 +216,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     int             changedBlackLevel;
     
     // Find what the user changed.
+    changedAcquire          = (newconfig.Acquire != configDalsa.Acquire);
     changedAcquisitionMode      = (newconfig.AcquisitionMode != configDalsa.AcquisitionMode);
     changedAcquisitionFrameRate = (newconfig.AcquisitionFrameRate != configDalsa.AcquisitionFrameRate);
 
@@ -238,6 +240,14 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     
     ROS_INFO_NAMED (NAME, "Inside Dynamic Reconfigure");
     // Set params into the camera.
+    if (changedAcquire)
+    {
+      if (newconfig.Acquire)
+        arv_device_execute_command (pDevice, "AcquisitionStart");
+      else
+        arv_device_execute_command (pDevice, "AcquisitionStop");      
+    }
+
     if (changedAcquisitionMode)
     {
       newconfig.AcquisitionMode = setCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
@@ -255,6 +265,11 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     {
       arv_device_execute_command (pDevice, "AcquisitionStop");
       newconfig.autoBrightnessMode = setCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
+      if (newconfig.autoBrightnessMode == "Off")
+      { // If autoBrightness goes Off, disable ExposureAuto, GainAuto
+        newconfig.ExposureAuto = setCameraFeature("ExposureAuto", newconfig.ExposureAuto);
+        newconfig.GainAuto     = setCameraFeature("GainAuto", newconfig.GainAuto);
+      }
       arv_device_execute_command (pDevice, "AcquisitionStart");
     }
 
@@ -426,9 +441,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
       newconfig.BlackLevel = setCameraFeature("BlackLevel", newconfig.BlackLevel);
     }
     
-    //arv_device_execute_command (pDevice, "AcquisitionStop");
-    //arv_device_execute_command (pDevice, "AcquisitionStart");
-    getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
+    /*getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
     getCameraFeature("autoBrightnessMode", newconfig.autoBrightnessMode);
     getCameraFeature("autoBrightnessSequence", newconfig.autoBrightnessSequence);
@@ -444,7 +457,7 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     getCameraFeature("GainAuto", newconfig.GainAuto);
     getCameraFeature("gainAutoMinValue", newconfig.gainAutoMinValue);
     getCameraFeature("gainAutoMaxValue", newconfig.gainAutoMaxValue);
-    getCameraFeature("BlackLevel", newconfig.BlackLevel);
+    getCameraFeature("BlackLevel", newconfig.BlackLevel);*/
     configDalsa = newconfig;
 } // RosReconfigure_callback_dalsa()
 
@@ -1836,6 +1849,7 @@ void CameraNode::Start()
         {
           ROS_INFO_NAMED (NAME, " Setting Parameters for dalsa camera");
           ROS_INFO_NAMED (NAME, "    ---------------------------");
+          //setFeatureFromParam(nh, "Acquire", "str");
           setFeatureFromParam(nh, "AcquisitionMode", "str");
           setFeatureFromParam(nh, "AcquisitionFrameRate", "float");
           setFeatureFromParam(nh, "autoBrightnessMode", "str");
@@ -1848,8 +1862,8 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "ExposureTime", "float");
           setFeatureFromParam(nh, "exposureAutoMinValue", "float");
           setFeatureFromParam(nh, "exposureAutoMaxValue", "float");
-          setFeatureFromParam(nh, "Gain", "float");
           setFeatureFromParam(nh, "GainAuto", "str");
+          setFeatureFromParam(nh, "Gain", "float");
           setFeatureFromParam(nh, "gainAutoMinValue", "float");
           setFeatureFromParam(nh, "gainAutoMaxValue", "float");
           setFeatureFromParam(nh, "BlackLevel", "float");
