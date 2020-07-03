@@ -214,6 +214,10 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     int             changedgainAutoMinValue;
     int             changedgainAutoMaxValue;
     int             changedBlackLevel;
+    int             changedTriggerMode;
+    int             changedTriggerSource;
+    int             changedLineSelector;
+    int             changedoutputLineSource;
     
     // Find what the user changed.
     changedAcquire          = (newconfig.Acquire != configDalsa.Acquire);
@@ -237,6 +241,11 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     changedgainAutoMinValue = (newconfig.gainAutoMinValue != configDalsa.gainAutoMinValue);
     changedgainAutoMaxValue = (newconfig.gainAutoMaxValue != configDalsa.gainAutoMaxValue);
     changedBlackLevel   = (newconfig.BlackLevel != configDalsa.BlackLevel);
+
+    changedTriggerMode = (newconfig.TriggerMode != configDalsa.TriggerMode);
+    changedTriggerSource = (newconfig.TriggerSource != configDalsa.TriggerSource);
+    changedLineSelector = (newconfig.LineSelector != configDalsa.LineSelector);
+    changedoutputLineSource =(newconfig.outputLineSource != configDalsa.outputLineSource);
     
     ROS_INFO_NAMED (NAME, "Inside Dynamic Reconfigure");
     // Set params into the camera.
@@ -440,6 +449,35 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     {
       newconfig.BlackLevel = setCameraFeature("BlackLevel", newconfig.BlackLevel);
     }
+
+    if (changedTriggerMode)
+    { 
+      arv_device_execute_command (pDevice, "AcquisitionStop");
+      newconfig.TriggerMode = setCameraFeature("TriggerMode", newconfig.TriggerMode);
+      arv_device_execute_command (pDevice, "AcquisitionStart");
+    }
+
+    if (changedTriggerSource)
+    {
+      if (configDalsa.TriggerMode == "On")
+      {
+        arv_device_execute_command (pDevice, "AcquisitionStop");
+        newconfig.TriggerSource = setCameraFeature("TriggerSource", newconfig.TriggerSource);
+        arv_device_execute_command (pDevice, "AcquisitionStart");
+      }
+      else
+        ROS_WARN ("TriggerMode is not active!");
+    }
+
+    if (changedLineSelector)
+    {
+      newconfig.LineSelector = setCameraFeature("LineSelector", newconfig.LineSelector);
+    }
+
+    if (changedoutputLineSource)
+    {
+        newconfig.outputLineSource = setCameraFeature("outputLineSource", newconfig.outputLineSource);
+    }
     
     /*getCameraFeature("AcquisitionMode", newconfig.AcquisitionMode);
     getCameraFeature("AcquisitionFrameRate", newconfig.AcquisitionFrameRate);
@@ -457,7 +495,11 @@ void CameraNode::RosReconfigure_callback_dalsa(DalsaConfig &newconfig, uint32_t 
     getCameraFeature("GainAuto", newconfig.GainAuto);
     getCameraFeature("gainAutoMinValue", newconfig.gainAutoMinValue);
     getCameraFeature("gainAutoMaxValue", newconfig.gainAutoMaxValue);
-    getCameraFeature("BlackLevel", newconfig.BlackLevel);*/
+    getCameraFeature("BlackLevel", newconfig.BlackLevel);
+    getCameraFeature("TriggerMode", newconfig.TriggerMode);
+    getCameraFeature("TriggerSource", newconfig.TriggerSource);
+    getCameraFeature("LineSelector", newconfig.LineSelector);
+    getCameraFeature("outputLineSource", newconfig.outputLineSource);*/
     configDalsa = newconfig;
 } // RosReconfigure_callback_dalsa()
 
@@ -1696,6 +1738,24 @@ void CameraNode::onInit()
 }
 */
 
+bool CameraNode::SoftwareTriggerService(std_srvs::Trigger::Request  &req,
+                                 std_srvs::Trigger::Response &res)
+{
+  gboolean success = SoftwareTrigger_callback(pDevice);
+  if (success)
+  {
+    res.message = "Successfull device trigger!";
+    res.success = true;
+    return true;
+  }
+  else
+  {
+    res.message = "Unsuccessfull device trigger!";
+    res.success = false;
+    return false;
+  }
+}
+
 void CameraNode::Start()
 {
 
@@ -1869,7 +1929,12 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "BlackLevel", "float");
           setFeatureFromParam(nh, "GevSCPSPacketSize", "int");
           setFeatureFromParam(nh, "TriggerMode", "str");
+          setFeatureFromParam(nh, "TriggerSource", "str");
+          setFeatureFromParam(nh, "LineSelector", "str");
+          setFeatureFromParam(nh, "outputLineSource", "str");
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
+
+          software_trigger_service = nh.advertiseService("execute_software_trigger", &CameraNode::SoftwareTriggerService, this);
           
           // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
           //boost::recursive_mutex config_mutex;
@@ -1891,7 +1956,11 @@ void CameraNode::Start()
           getCameraFeature("Gain", configDalsa.Gain);
           getCameraFeature("gainAutoMinValue", configDalsa.gainAutoMinValue);
           getCameraFeature("gainAutoMaxValue", configDalsa.gainAutoMaxValue);
-          getCameraFeature("BlackLevel", configDalsa.BlackLevel);*/
+          getCameraFeature("BlackLevel", configDalsa.BlackLevel);
+          getCameraFeature("TriggerMode", configDalsa.TriggerMode);
+          getCameraFeature("TriggerSource", configDalsa.TriggerSource);
+          getCameraFeature("LineSelector", configDalsa.LineSelector);
+          getCameraFeature("outputLineSource", configDalsa.outputLineSource);*/
           
           //reconfigureServerDalsa.updateConfig(configDalsa); // sync up with dynamic reconfig so everyone has the same config
           assert(("reconfigureServerDalsa is null ", reconfigureServerDalsa != 0));

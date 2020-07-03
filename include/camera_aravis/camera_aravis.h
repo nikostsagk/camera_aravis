@@ -30,6 +30,7 @@
 #include <ros/time.h>
 #include <ros/duration.h>
 
+#include <std_srvs/Trigger.h>
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Int64.h>
 #include <sensor_msgs/image_encodings.h>
@@ -153,6 +154,9 @@ class CameraNode
 
   const char* GetPixelEncoding(ArvPixelFormat pixel_format);
 
+  bool SoftwareTriggerService(std_srvs::Trigger::Request  &req,
+                       std_srvs::Trigger::Response &res);
+
   //virtual void onInit();
 
 private:
@@ -160,6 +164,8 @@ private:
 
   image_transport::CameraPublisher        publisher;
   camera_info_manager::CameraInfoManager *pCameraInfoManager;
+
+  ros::ServiceServer                      software_trigger_service;
 
   //dynamic_reconfigure::Server<IDSConfig>       *reconfigureServerIDS;
   //dynamic_reconfigure::Server<MakoConfig>      *reconfigureServerMako;
