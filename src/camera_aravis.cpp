@@ -1459,6 +1459,12 @@ gboolean CameraNode::SoftwareTrigger_callback (void *device)
     return TRUE;
 }
 
+gboolean CameraNode::AutoWhiteBalance_callback (void *device)
+{
+    arv_device_set_string_feature_value ((ArvDevice *)device, "BalanceWhiteAuto", "OnDemand");
+    arv_device_execute_command ((ArvDevice *)device, "balanceWhiteAutoOnDemandCmd");
+    return TRUE;
+}
 
 // PeriodicTask_callback()
 // Check for termination, and spin for ROS.
@@ -1756,6 +1762,24 @@ bool CameraNode::SoftwareTriggerService(std_srvs::Trigger::Request  &req,
   }
 }
 
+bool CameraNode::AutoWhiteBalanceService(std_srvs::Trigger::Request  &req,
+                                 std_srvs::Trigger::Response &res)
+{
+  gboolean success = AutoWhiteBalance_callback(pDevice);
+  if (success)
+  {
+    res.message = "Successfull white balance triggering!";
+    res.success = true;
+    return true;
+  }
+  else
+  {
+    res.message = "Unsuccessfull white balance triggering!";
+    res.success = false;
+    return false;
+  }
+}
+
 void CameraNode::Start()
 {
 
@@ -1934,7 +1958,9 @@ void CameraNode::Start()
           setFeatureFromParam(nh, "outputLineSource", "str");
           arv_camera_set_region (pCamera, xRoi, yRoi, widthRoiMax, heightRoiMax);
 
+          // Features that can be "executed" through services
           software_trigger_service = nh.advertiseService("execute_software_trigger", &CameraNode::SoftwareTriggerService, this);
+          autowhitebalance_service = nh.advertiseService("execute_auto_white_balance", &CameraNode::AutoWhiteBalanceService, this);
           
           // Start the dynamic_reconfigure server. Don't set the callback yet so that we can override the default configuration
           //boost::recursive_mutex config_mutex;

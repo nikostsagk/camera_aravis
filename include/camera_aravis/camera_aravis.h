@@ -127,6 +127,8 @@ class CameraNode
 
   static gboolean SoftwareTrigger_callback(void *pCamera);
 
+  static gboolean AutoWhiteBalance_callback(void *pCamera);
+
   // PeriodicTask_callback()
   // Check for termination, and spin for ROS.
   static gboolean PeriodicTask_callback (void *data);
@@ -156,6 +158,8 @@ class CameraNode
 
   bool SoftwareTriggerService(std_srvs::Trigger::Request  &req,
                        std_srvs::Trigger::Response &res);
+  bool AutoWhiteBalanceService(std_srvs::Trigger::Request  &req,
+                       std_srvs::Trigger::Response &res);
 
   //virtual void onInit();
 
@@ -166,6 +170,7 @@ private:
   camera_info_manager::CameraInfoManager *pCameraInfoManager;
 
   ros::ServiceServer                      software_trigger_service;
+  ros::ServiceServer                      autowhitebalance_service;
 
   //dynamic_reconfigure::Server<IDSConfig>       *reconfigureServerIDS;
   //dynamic_reconfigure::Server<MakoConfig>      *reconfigureServerMako;
